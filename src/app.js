@@ -6,6 +6,7 @@ var CONSTANTS = require('./constants');
 
 /* APP SETUP & ROUTES */
 var app = express();
+app.set('port', (process.env.PORT || 3000));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res) {
@@ -18,7 +19,7 @@ app.get('/constants', function(req, res) {
 
 /* SERVE APP */
 var server = http.createServer(app);
-server.listen(3000, function() {
+server.listen(app.get('port'), function() {
   console.log('listening on *:3000');
 });
 
