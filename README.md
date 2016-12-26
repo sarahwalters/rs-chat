@@ -12,7 +12,7 @@
 ### Running locally
 - Clone the repository
 - From the repository:
-    -`npm install` (this pulls the dependencies from the `package.json` into a `node_modules` directory)
+    - `npm install` (this pulls the dependencies from the `package.json` into a `node_modules` directory)
     - `nodemon` (this starts a server which watches the files in the repository and restarts when they change)
 - Browse to [localhost:3000](localhost:3000)
 
