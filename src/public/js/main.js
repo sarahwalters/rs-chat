@@ -8,7 +8,10 @@
 
     // upon form submit, encode newly posted message and emit on socket to server
     $('#post').keypress(function(e) {
-      if (e.which != 13) return; // only submit upon enter key press
+      // only submit upon enter key press
+      if (e.which != 13) {
+        return;
+      }
 
       var msg = $('#post').val();
       var encoded = RS.encode(msg);
