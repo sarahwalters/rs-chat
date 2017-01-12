@@ -24,5 +24,5 @@
 
 ### Devtools
 - From the repository:
-    - To run the test suite: `npm test` (tests don't exist yet)
+    - To run the test suite: `npm test`
     - To lint: `npm run lint`
