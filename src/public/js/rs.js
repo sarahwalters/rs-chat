@@ -1,4 +1,4 @@
-`use strict`;
+'use strict';
 var RS = (function() {
   // (actually ROT-13 right now, as a dummy example. We can replace w/ RS)
   var ROT = 13;
@@ -23,6 +23,6 @@ var RS = (function() {
 
   return {
     encode: encode,
-    decode: decode
+    decode: decode,
   };
 })();
