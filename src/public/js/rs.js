@@ -125,6 +125,28 @@ var RS = (function() {
       codedMsg[i] = remainder[i - k]
     }
   }
+  function decodeRSBlock(codedMsg, n, k) {
+    remainder = polynomialDiv(genPoly, codedMsg, n, k)
+    if (remainder == null) {
+      return null;
+    }
+    errors = false;
+    for (i = 0; i < n-k; i++) {
+      if (remainder[i] != 0) {
+        errors = true
+      }
+    }
+    if (errors) {
+      // TODO ERROR CORRECTION
+      return null
+    } else {
+      msg = new Uint8Array(k)
+      for (i = 0; i < k; i++) {
+        msg[i] = codedMsg[i]
+      }
+      return msg
+    }
+  }
 
   function polynomialDiv(divisor, dividend, n, k) {
     if (divisor.length != k || dividend.length != n) {
