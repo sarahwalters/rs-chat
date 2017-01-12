@@ -23,6 +23,6 @@ var RS = (function() {
 
   return {
     encode: encode,
-    decode: decode,
+    decode: decode
   };
 })();
