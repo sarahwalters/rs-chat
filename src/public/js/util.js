@@ -114,11 +114,10 @@ var UTIL = (function() {
      0xdd, 0x9c, 0x7d, 0xa0, 0xcd, 0x1a, 0x41, 0x1c]);
 
   function fieldDivide(dividend, divisor) {
-    if (dividend == 0) {
-      return 0;
-    }
     if (divisor == 0) {
       throw new Error('Can\'t divide by 0');
+    } else if (dividend == 0) {
+      return 0;
     }
     var t = log3[dividend] - log3[divisor];
     if (t < 0) {
@@ -147,12 +146,12 @@ var UTIL = (function() {
   }
 
   function polynomialDiv(dividend, divisor, n, k) {
-    var divLen = n - k + 1
+    var divLen = n - k + 1;
     if (divisor.length != divLen || dividend.length != n || k >= n) {
       throw new Error('Incorrect n, k, or length of dividend or divisor');
       return null;
     }
-    for (i = 0; i < k; i++) {
+    for (var i = 0; i < k; i++) {
       // Find how many of highest order of scaled divisor go in to
       // current highest order of leftover dividend
       // Because of precompute it is simply the coefficient of the
@@ -163,23 +162,22 @@ var UTIL = (function() {
       // by multiplying each coefficient of precomputed divisor by current
       // highest order quotient
       var scaledDivisor = new Uint8Array(divLen);
-      for (j = 0; j < divLen; j++) {
+      for (var j = 0; j < divLen; j++) {
         scaledDivisor[j] = fieldMultiply(divisor[j], quotient);
       }
 
       // Subtract scaled divisor from current remainder of dividend
       // to get new remainder of dividend which will be 1 order less
-      for (j = i; j < i + divLen; j++) {
+      for (var j = i; j < i + divLen; j++) {
         // Galois extension field subtraction is xor with base field 2
         dividend[j] = dividend[j] ^ scaledDivisor[j - i];
       }
     }
 
-    // I am sure there is a better way to do this but I am bad.
-    var remainder = dividend.slice(-(n-k))
+    var remainder = dividend.slice(-(n - k));
 
     // Adding this as kinda failsafe test case
-    for (i = 0; i < (n - k); i++) {
+    for (var i = 0; i < (n - k); i++) {
       if (dividend[i] != 0) {
         throw new Error('Division did not happen properly');
       }

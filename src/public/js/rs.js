@@ -25,7 +25,7 @@ var RS = (function() {
   function encodeRSBlock(msg, n, k) {
     var remainder = UTIL.polynomialDiv(msg, genPoly, n, k);
     var codedMsg = new Uint8Array(n);
-    for (i = 0; i < k; i++) {
+    for (var i = 0; i < k; i++) {
       codedMsg[i] = msg[i];
     }
     for (i = k; i < n; i++) {
@@ -37,7 +37,7 @@ var RS = (function() {
   function decodeRSBlock(codedMsg, n, k) {
     var remainder = UTIL.polynomialDiv(codedMsg, genPoly, n, k);
     var errors = false;
-    for (i = 0; i < n - k; i++) {
+    for (var i = 0; i < n - k; i++) {
       if (remainder[i] != 0) {
         errors = true;
         break;
