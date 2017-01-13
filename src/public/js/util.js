@@ -114,10 +114,13 @@ var UTIL = (function() {
      0x5b, 0x23, 0x38, 0x34, 0x68, 0x46, 0x03, 0x8c,
      0xdd, 0x9c, 0x7d, 0xa0, 0xcd, 0x1a, 0x41, 0x1c]);
 
-  function fieldDivide(divisor, dividend) {
+  function fieldDivide(dividend, divisor) {
     var t = 0;
-    if (divisor == 0 || dividend == 0) {
+    if (dividend == 0) {
       return 0;
+    }
+    if (divisor == 0) {
+      throw new Error('Can\'t divide by 0');
     }
     t = log3[dividend] - log3[divisor];
     if (t < 0) {
@@ -148,6 +151,7 @@ var UTIL = (function() {
 
   function polynomialDiv(dividend, divisor, n, k) {
     if (divisor.length != k || dividend.length != n || k >= n) {
+      throw new Error('Incorrect n, k, or length of dividend or divisor');
       return null;
     }
     // Precompute divisor's highest order inverse and distribute
@@ -188,7 +192,7 @@ var UTIL = (function() {
     // Adding this as kinda failsafe test case
     for (i = 0; i < k + 1; i++) {
       if (dividend[i] != 0) {
-        return null;
+        throw new Error('Division did not happen properly');
       }
     }
     return remainder;

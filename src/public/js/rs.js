@@ -26,9 +26,6 @@ var RS = (function() {
   // to maintain the ordering of [msg, code symbols] in the coded msg.
   function encodeRSBlock(msg, n, k) {
     var remainder = UTIL.polynomialDiv(msg, genPoly, n, k);
-    if (remainder == null) {
-      return null;
-    }
     var codedMsg = new Uint8Array(n);
     for (i = 0; i < k; i++) {
       codedMsg[i] = msg[i];
@@ -41,27 +38,23 @@ var RS = (function() {
 
   function decodeRSBlock(codedMsg, n, k) {
     var remainder = UTIL.polynomialDiv(codedMsg, genPoly, n, k);
-    if (remainder == null) {
-      return null;
-    }
     var errors = false;
     for (i = 0; i < n - k; i++) {
       if (remainder[i] != 0) {
         errors = true;
+        break;
       }
     }
     if (errors) {
       // TODO ERROR CORRECTION
-      return null;
+      throw new Error('Error correction not implemented yet');
     } else {
       var msg = new Uint8Array(k);
       for (i = 0; i < k; i++) {
         msg[i] = codedMsg[i];
-        break;
       }
       return msg;
     }
-    return null;
   }
 
   return {
