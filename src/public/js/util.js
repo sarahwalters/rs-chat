@@ -1,7 +1,6 @@
 `use strict`;
 var UTIL = (function() {
   var GEN = 3;
-  var GF = 256;
 
   // This gives you the value of log3 of the value you pass in
   // log3[0] is undefined but for sake of direct
@@ -115,14 +114,13 @@ var UTIL = (function() {
      0xdd, 0x9c, 0x7d, 0xa0, 0xcd, 0x1a, 0x41, 0x1c]);
 
   function fieldDivide(dividend, divisor) {
-    var t = 0;
     if (dividend == 0) {
       return 0;
     }
     if (divisor == 0) {
       throw new Error('Can\'t divide by 0');
     }
-    t = log3[dividend] - log3[divisor];
+    var t = log3[dividend] - log3[divisor];
     if (t < 0) {
       t = t + 255;
     }
@@ -130,11 +128,10 @@ var UTIL = (function() {
   }
 
   function fieldMultiply(mult1, mult2) {
-    var t = 0;
     if (mult1 == 0 || mult2 == 0) {
       return 0;
     }
-    t = log3[mult1] + log3[mult2];
+    var t = log3[mult1] + log3[mult2];
     if (t > 255) {
       t = t - 255;
     }
@@ -150,18 +147,12 @@ var UTIL = (function() {
   }
 
   function polynomialDiv(dividend, divisor, n, k) {
-    if (divisor.length != k || dividend.length != n || k >= n) {
+    var divLen = n - k + 1
+    if (divisor.length != divLen || dividend.length != n || k >= n) {
       throw new Error('Incorrect n, k, or length of dividend or divisor');
       return null;
     }
-    // Precompute divisor's highest order inverse and distribute
-    // to all of divisor
-    var invVal = multInv[divisor[0]];
     for (i = 0; i < k; i++) {
-      divisor[i] = fieldMultiply(divisor[i], invVal);
-    }
-    for (i = 0; i < n - k; i++) {
-
       // Find how many of highest order of scaled divisor go in to
       // current highest order of leftover dividend
       // Because of precompute it is simply the coefficient of the
@@ -171,26 +162,24 @@ var UTIL = (function() {
       // Find scaled divisor to subtract from current remainder of dividend
       // by multiplying each coefficient of precomputed divisor by current
       // highest order quotient
-      var scaledDivisor = new Uint8Array(k);
-      for (j = 0; j < k; j++) {
+      var scaledDivisor = new Uint8Array(divLen);
+      for (j = 0; j < divLen; j++) {
         scaledDivisor[j] = fieldMultiply(divisor[j], quotient);
       }
 
       // Subtract scaled divisor from current remainder of dividend
       // to get new remainder of dividend which will be 1 order less
-      for (j = i; j < i + k; j++) {
+      for (j = i; j < i + divLen; j++) {
         // Galois extension field subtraction is xor with base field 2
         dividend[j] = dividend[j] ^ scaledDivisor[j - i];
       }
     }
 
     // I am sure there is a better way to do this but I am bad.
-    var remainder = new Uint8Array(n - k - 1);
-    for (i = 0; i < n - k - 1; i++) {
-      remainder[i] = dividend[i + k + 1];
-    }
+    var remainder = dividend.slice(-(n-k))
+
     // Adding this as kinda failsafe test case
-    for (i = 0; i < k + 1; i++) {
+    for (i = 0; i < (n - k); i++) {
       if (dividend[i] != 0) {
         throw new Error('Division did not happen properly');
       }

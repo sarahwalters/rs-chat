@@ -2,8 +2,6 @@
 var RS = (function() {
   // (actually ROT-13 right now, as a dummy example. We can replace w/ RS)
   var ROT = 13;
-  var GEN = 3;
-  var GF = 256;
 
   function encode(msg) {
     // dummy cipher for now -- advances each letter in message by ROT
@@ -49,11 +47,7 @@ var RS = (function() {
       // TODO ERROR CORRECTION
       throw new Error('Error correction not implemented yet');
     } else {
-      var msg = new Uint8Array(k);
-      for (i = 0; i < k; i++) {
-        msg[i] = codedMsg[i];
-      }
-      return msg;
+      return codedMsg.slice(0, k);
     }
   }
 
