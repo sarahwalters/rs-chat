@@ -83,59 +83,70 @@ var RS = (function() {
   function performBerlekampMassey(syndromePoly, n, k) {
     // Compute 1 + syndromePoly in GF (copying to avoid modifying input)
     // Changes the 0 in the z^0 place in syndromePoly to a 1, which we need mathematically
-    var syndromePolyPlusOne = syndromePoly.slice();
+    var syndromePolyPlusOne = syndromePoly.slice(0);
     syndromePolyPlusOne[syndromePoly.length - 1] ^= 1;
 
     // Initial conditions
-    var sigma = new Uint8Array([1]);
-    var omega = new Uint8Array([1]);
-    var tau = new Uint8Array([1]);
-    var gamma = new Uint8Array([0]);
-    var D = 0;
-    var B = false;
+    var sigmas = new Array(n - k + 1);
+    sigmas[0] = new Uint8Array([1]);
+    var omegas = new Array(n - k + 1);
+    omegas[0] = new Uint8Array([1]);
+    var taus = new Array(n - k + 1);
+    taus[0] = new Uint8Array([1]);
+    var gammas = new Array(n - k + 1);
+    gammas[0] = new Uint8Array([0]);
+    var Ds = new Array(n - k + 1);
+    Ds[0] = 0;
+    var Bs = new Array(n - k + 1);
+    Bs[0] = false;
 
     // Perform n-k iterations
-    var DThreshold, lhs, delta, shiftedTau, shiftedGamma, scaledTau, scaledGamma;
-    for (var i = 1; i <= n - k; i++) {
+    var lhs, delta, shiftedTau, shiftedGamma, scaledTau, scaledGamma, DThreshold;
+    for (var i = 0; i < n - k + 1; i++) {
       // Compute the left-hand side of the key equation
-      lhs = UTIL.polynomialMult(sigma, syndromePolyPlusOne);
+      lhs = UTIL.polynomialMult(sigmas[i], syndromePolyPlusOne);
+      console.log(lhs, omegas[i], i);
 
       // Delta is the coefficient of z^(i+1)
       delta = lhs[(lhs.length - 1) - (i + 1)];
 
       // Use tau and gamma to update sigma and omega:
-      shiftedTau = UTIL.mergeTypedArrays(tau, new Uint8Array([0])); // z * tau
-      shiftedGamma = UTIL.mergeTypedArrays(gamma, new Uint8Array([0])); // z * gamma
+      shiftedTau = UTIL.mergeTypedArrays(taus[i], new Uint8Array([0])); // z * tau
+      shiftedGamma = UTIL.mergeTypedArrays(gammas[i], new Uint8Array([0])); // z * gamma
       scaledTau = UTIL.polynomialScale(shiftedTau, delta); // delta * z * tau
       scaledGamma = UTIL.polynomialScale(shiftedGamma, delta); // delta * z * gamma
-      sigma = UTIL.polynomialAdd(sigma, scaledTau);
-      omega = UTIL.polynomialAdd(omega, scaledGamma);
+      sigmas[i + 1] = UTIL.polynomialAdd(sigmas[i], scaledTau);
+      omegas[i + 1] = UTIL.polynomialAdd(omegas[i], scaledGamma);
 
       // Follow the B-M iteration rules to update tau and gamma:
       DThreshold = (i + 1) / 2;
-      if (delta == 0 || D > DThreshold || (D == DThreshold && !B)) {
+      if (delta == 0 || Ds[i] > DThreshold || (Ds[i] == DThreshold && !Bs[i])) {
         // RULE A
-        tau = UTIL.mergeTypedArrays(tau, new Uint8Array([0]));
-        gamma = UTIL.mergeTypedArrays(gamma, new Uint8Array([0]));
+        taus[i + 1] = UTIL.mergeTypedArrays(taus[i], new Uint8Array([0]));
+        gammas[i + 1] = UTIL.mergeTypedArrays(gammas[i], new Uint8Array([0]));
       } else {
         // RULE B
         var invDelta = UTIL.multInv(delta);
-        tau = UTIL.polynomialScale(sigma, invDelta);
-        gamma = UTIL.polynomialScale(omega, invDelta);
-
+        taus[i + 1] = UTIL.polynomialScale(sigmas[i], invDelta);
+        gammas[i + 1] = UTIL.polynomialScale(omegas[i], invDelta);
         // Update the D tracker
-        D = i + 1 - D;
+        Ds[i + 1] = i + 1 - Ds[i];
 
         // If the equality case triggered, turn the B flag off
-        if (D == DThreshold) {
-          B = false;
+        if (Ds[i] == DThreshold) {
+          Bs[i + 1] = false;
         }
       }
     }
 
+    lhs = UTIL.polynomialMult(sigmas[n - k], syndromePolyPlusOne);
+    console.log(lhs, omegas[n - k]);
+    console.log(sigmas[n - k]);
+    console.log(omegas[n - k]);
+
     return {
-      errorLocationPoly: sigma,
-      errorMagnitudePoly: omega
+      errorLocationPoly: sigmas[n - k],
+      errorMagnitudePoly: omegas[n - k]
     };
   }
 
@@ -156,11 +167,12 @@ var RS = (function() {
       var numerator = UTIL.polynomialEval(errorMagnitudePoly, invXi);
 
       var denominator = 1;
-      var xj;
+      var xj, productTerm;
       for (var j = 0; j < errorLocations.length; j++) {
         xj = errorLocations[j];
         if (j != i) {
-          denominator *= (1 ^ UTIL.fieldMultiply(xj, invXi));
+          productTerm = (1 ^ UTIL.fieldMultiply(xj, invXi));
+          denominator = UTIL.fieldMultiply(denominator, productTerm);
         }
       }
 
@@ -178,16 +190,10 @@ var RS = (function() {
   var encoded = encodeRSBlock(msg, n, k);
   console.log('encoded', encoded);
   var withError = encoded.slice(0);
-  withError[0] ^= 5;
+  withError[0] ^= 1;
   console.log('withError', withError);
   var decoded = decodeRSBlock(withError, n, k);
   console.log('decoded', decoded);
-
-
-  // var syndromePoly = computeSyndromePoly(withError, n, k);
-  // console.log('syndromes', syndromePoly);
-  // var bm = performBerlekampMassey(syndromePoly, n, k);
-  // console.log(bm);
 
   return {
     encode: encode,
