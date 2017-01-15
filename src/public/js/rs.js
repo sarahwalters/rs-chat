@@ -45,13 +45,23 @@ var RS = (function() {
       }
     }
     if (errors) {
+      // Perform B-M decoding
       var syndromes = computeSyndromePoly(receivedMsg, n, k);
-      console.log('syndromes', syndromes);
       var bm = performBerlekampMassey(syndromes, n, k);
       var errorLocations = chienSearch(bm.errorLocationPoly);
       var errorMagnitudes = forneysFormula(errorLocations, bm.errorMagnitudePoly);
-      console.log(errorLocations, errorMagnitudes);
-      //throw new Error('Error correction not implemented yet');
+      var repairedMsg = repair(receivedMsg, errorLocations, errorMagnitudes);
+
+      // Check that the repaired message is in fact divisible by genPoly
+      var repairedRemainder = UTIL.polynomialDiv(repairedMsg, genPoly, n, k);
+      var repairedErrors = false;
+      for (var i = 0; i < n - k; i++) {
+        if (repairedRemainder[i] != 0) {
+          throw new Error('Too many errors to decode.');
+        }
+      }
+
+      return repairedMsg.slice(0, k);
     } else {
       return receivedMsg.slice(0, k);
     }
@@ -105,7 +115,6 @@ var RS = (function() {
     for (var i = 0; i < n - k + 1; i++) {
       // Compute the left-hand side of the key equation
       lhs = UTIL.polynomialMult(sigmas[i], syndromePolyPlusOne);
-      console.log(lhs, omegas[i], i);
 
       // Delta is the coefficient of z^(i+1)
       delta = lhs[(lhs.length - 1) - (i + 1)];
@@ -129,6 +138,7 @@ var RS = (function() {
         var invDelta = UTIL.multInv(delta);
         taus[i + 1] = UTIL.polynomialScale(sigmas[i], invDelta);
         gammas[i + 1] = UTIL.polynomialScale(omegas[i], invDelta);
+
         // Update the D tracker
         Ds[i + 1] = i + 1 - Ds[i];
 
@@ -138,11 +148,6 @@ var RS = (function() {
         }
       }
     }
-
-    lhs = UTIL.polynomialMult(sigmas[n - k], syndromePolyPlusOne);
-    console.log(lhs, omegas[n - k]);
-    console.log(sigmas[n - k]);
-    console.log(omegas[n - k]);
 
     return {
       errorLocationPoly: sigmas[n - k],
@@ -182,15 +187,31 @@ var RS = (function() {
     return errorMagnitudes;
   }
 
+  function repair(received, errorLocations, errorMagnitudes) {
+    var errorIndices = errorLocations.map(function(location) {
+      return received.length - 1 - UTIL.log3(location);
+    });
+
+    var corrected = received.slice(0);
+    var errorIndex;
+    for (var i = 0; i < errorIndices.length; i++) {
+      errorIndex = errorIndices[i];
+      corrected[errorIndex] ^= errorMagnitudes[i];
+    }
+
+    return corrected;
+  }
+
   var n = 8;
   var k = 4;
-  var genPoly = new Uint8Array([1, 2, 3, 4, 5]);
+  var genPoly = new Uint8Array([1, 24, 180, 158, 114]);
   var msg = new Uint8Array([2, 3, 4, 5]);
   console.log('msg', msg);
   var encoded = encodeRSBlock(msg, n, k);
   console.log('encoded', encoded);
   var withError = encoded.slice(0);
-  withError[0] ^= 1;
+  withError[2] ^= 100;
+  withError[1] ^= 3;
   console.log('withError', withError);
   var decoded = decodeRSBlock(withError, n, k);
   console.log('decoded', decoded);

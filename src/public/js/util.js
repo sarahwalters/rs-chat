@@ -232,7 +232,7 @@ var UTIL = (function() {
   function polynomialMult(mult1, mult2) {
     // Handle the zero case
     if (mult1.every(isZero) || mult2.every(isZero)) {
-      return [0];
+      return new Uint8Array([0]);
     }
 
     // Each polynomial mult has degree mult.length - 1;
