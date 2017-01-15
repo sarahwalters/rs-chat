@@ -20,10 +20,11 @@ var RS = (function() {
   // n - k is the number of code symbols added.
   // Encoding procedure has the largest order coefficient on the left
   // and the smallest on the right. IE: [1,2,3] -> x^2 + 2x + 3
-  // The largest order coeeficient is the [0] element of msg so as
+  // The largest order coefficient is the [0] element of msg so as
   // to maintain the ordering of [msg, code symbols] in the coded msg.
   function encodeRSBlock(msg, n, k) {
-    var remainder = UTIL.polynomialDiv(msg, genPoly, n, k);
+    var paddedMsg = msg.concat(new Array(n - k).fill(0));
+    var remainder = UTIL.polynomialDiv(paddedMsg, genPoly, n, k);
     var codedMsg = new Uint8Array(n);
     for (var i = 0; i < k; i++) {
       codedMsg[i] = msg[i];

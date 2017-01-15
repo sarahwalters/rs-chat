@@ -146,6 +146,9 @@ var UTIL = (function() {
   }
 
   function polynomialDiv(dividend, divisor, n, k) {
+    // Make a copy of dividend to avoid modifying input
+    dividend = dividend.slice(0);
+
     var divLen = n - k + 1;
     if (divisor.length != divLen || dividend.length != n || k >= n) {
       throw new Error('Incorrect n, k, or length of dividend or divisor');
