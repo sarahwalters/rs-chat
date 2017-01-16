@@ -176,12 +176,12 @@ var RS = (function() {
       for (var j = 0; j < errorLocations.length; j++) {
         xj = errorLocations[j];
         if (j != i) {
-          productTerm = (1 ^ UTIL.fieldMultiply(xj, invXi));
-          denominator = UTIL.fieldMultiply(denominator, productTerm);
+          productTerm = (1 ^ UTIL.fieldMult(xj, invXi));
+          denominator = UTIL.fieldMult(denominator, productTerm);
         }
       }
 
-      return UTIL.fieldDivide(numerator, denominator);
+      return UTIL.fieldDiv(numerator, denominator);
     });
 
     return errorMagnitudes;
@@ -209,11 +209,11 @@ var RS = (function() {
   console.log('msg', msg);
   var encoded = encodeRSBlock(msg, n, k);
   console.log('encoded', encoded);
-  var withError = encoded.slice(0);
-  withError[2] ^= 100;
-  withError[1] ^= 3;
-  console.log('withError', withError);
-  var decoded = decodeRSBlock(withError, n, k);
+  var withErrors = encoded.slice(0);
+  withErrors[2] ^= 100;
+  withErrors[1] ^= 3;
+  console.log('withErrors', withErrors);
+  var decoded = decodeRSBlock(withErrors, n, k);
   console.log('decoded', decoded);
 
   return {
