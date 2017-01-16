@@ -188,8 +188,6 @@ var UTIL = (function() {
   // Both mult1 and mult2 are big-endian arrays of integers which
   // represent polynomials (so, [1,2,3] is x^2 + 2*x + 3)
   function polynomialMult(mult1, mult2) {
-    // TODO without reverse
-
     // Handle the zero case
     if (mult1.every(isZero) || mult2.every(isZero)) {
       return new Uint8Array([0]);
@@ -202,23 +200,17 @@ var UTIL = (function() {
     var resultLength = mult1.length + mult2.length - 1;
     var result = new Uint8Array(resultLength).fill(0);
 
-    // Work little-endian
-    mult1 = mult1.slice();
-    mult2 = mult2.slice();
-    mult1.reverse();
-    mult2.reverse();
-
     // Multiply the elements of the polynomials pairwise
-    var foilCoefficient, foilPower;
+    var foilCoefficient, foilPower, foilIndex;
     for (var i = 0; i < mult1.length; i++) {
       for (var j = 0; j < mult2.length; j++) {
         foilCoefficient = fieldMult(mult1[i], mult2[j]);
-        foilPower = i + j;
-        result[foilPower] ^= foilCoefficient; // GF addition is xor with base field 2
+        foilPower = (mult1.length - 1 - i) + (mult2.length - 1 - j);
+        foilIndex = resultLength - 1 - foilPower;
+        result[foilIndex] ^= foilCoefficient; // GF addition is xor with base field 2
       }
     }
 
-    result.reverse(); // switch to big-endian
     return result;
   }
 
