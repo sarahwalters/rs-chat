@@ -262,15 +262,11 @@ var UTIL = (function() {
   // polynomial is represented as a big-endian array, IE: [1,2,3] -> x^2 + 2x + 3
   // value is represented as an integer
   function polynomialEval(polynomial, value) {
-    // TODO without reverse
-    polynomial = polynomial.slice(0); // make a copy to avoid modifying input
-    polynomial.reverse(); // switch to little-endian so index is exponent of x
-
     var valuePower = 1; // updated to represent value^i during loop
     var result = 0;
     var term, coefficient;
     for (var i = 0; i < polynomial.length; i++) {
-      coefficient = polynomial[i];
+      coefficient = polynomial[polynomial.length - 1 - i];
       term = fieldMult(coefficient, valuePower);
       result = result ^ term; // Galois extension field addition is xor with base field 2
       valuePower = fieldMult(valuePower, value);
