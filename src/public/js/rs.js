@@ -74,20 +74,20 @@ var RS = (function() {
   // receivedMsg is an array of length n
   // n specifies the length of the codeword / received message
   // k specifies the length of the original message
-  // Returns a big-endian array representing a polynomial -> [1, 2, 3] is x^2 + 2*x + 3
+  // Returns a big-endian array of length (n-k+1) which represents a polynomial
+  // -> [1, 2, 3] is x^2 + 2*x + 3
   function computeSyndromePoly(receivedMsg, n, k) {
-    // To start with, let syndromes be little-endian so index corresponds to power of x
     var syndromes = new Uint8Array(n - k + 1);
 
     // Add the 0th syndrome to represent the coefficient of z^0 even though it's not useful for error correction
-    syndromes[0] = 0;
+    syndromes[n - k] = 0;
 
     var syndrome;
     for (var i = 1; i <= n - k; i++) {
       syndrome = UTIL.polynomialEval(receivedMsg, UTIL.exp3(i));
-      syndromes[i] = syndrome;
+      syndromes[syndromes.length - 1 - i] = syndrome;
     }
-    syndromes.reverse(); // switch to big-endian
+
     return syndromes;
   }
 
@@ -99,16 +99,16 @@ var RS = (function() {
 
     // Initial conditions
     var sigmas = new Array(n - k + 1);
-    sigmas[0] = new Uint8Array([1]);
     var omegas = new Array(n - k + 1);
-    omegas[0] = new Uint8Array([1]);
     var taus = new Array(n - k + 1);
-    taus[0] = new Uint8Array([1]);
     var gammas = new Array(n - k + 1);
-    gammas[0] = new Uint8Array([0]);
     var Ds = new Array(n - k + 1);
-    Ds[0] = 0;
     var Bs = new Array(n - k + 1);
+    sigmas[0] = new Uint8Array([1]);
+    omegas[0] = new Uint8Array([1]);
+    taus[0] = new Uint8Array([1]);
+    gammas[0] = new Uint8Array([0]);
+    Ds[0] = 0;
     Bs[0] = false;
 
     // Perform n-k iterations
@@ -210,6 +210,7 @@ var RS = (function() {
     return corrected;
   }
 
+  // TESTING RS DECODING -- TODO REMOVE
   var n = 8;
   var k = 4;
   var genPoly = new Uint8Array([1, 24, 180, 158, 114]);
