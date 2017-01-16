@@ -49,7 +49,8 @@ var RS = (function() {
       var syndromes = computeSyndromePoly(receivedMsg, n, k);
       var bm = performBerlekampMassey(syndromes, n, k);
       var errorLocations = chienSearch(bm.errorLocationPoly);
-      var errorMagnitudes = forneysFormula(errorLocations, bm.errorMagnitudePoly);
+      var errorMagnitudes = forneysFormula(errorLocations,
+                                           bm.errorMagnitudePoly);
       var repairedMsg = repair(receivedMsg, errorLocations, errorMagnitudes);
 
       // Check that the repaired message is in fact divisible by genPoly
@@ -111,7 +112,13 @@ var RS = (function() {
     Bs[0] = false;
 
     // Perform n-k iterations
-    var lhs, delta, shiftedTau, shiftedGamma, scaledTau, scaledGamma, DThreshold;
+    var lhs;
+    var delta;
+    var shiftedTau;
+    var shiftedGamma;
+    var scaledTau;
+    var scaledGamma;
+    var DThreshold;
     for (var i = 0; i < n - k + 1; i++) {
       // Compute the left-hand side of the key equation
       lhs = UTIL.polynomialMult(sigmas[i], syndromePolyPlusOne);
@@ -172,7 +179,8 @@ var RS = (function() {
       var numerator = UTIL.polynomialEval(errorMagnitudePoly, invXi);
 
       var denominator = 1;
-      var xj, productTerm;
+      var xj;
+      var productTerm;
       for (var j = 0; j < errorLocations.length; j++) {
         xj = errorLocations[j];
         if (j != i) {

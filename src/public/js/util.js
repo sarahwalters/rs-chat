@@ -40,10 +40,10 @@ var UTIL = (function() {
      0x0d, 0x63, 0x8c, 0x80, 0xc0, 0xf7, 0x70, 0x07]);
   log3.get = function(x) {
     if (x < 1 || x >= log3.length) {
-      throw new Error("Invalid lookup into log3 LUT.");
+      throw new Error('Invalid lookup into log3 LUT.');
     }
     return log3[x];
-  }
+  };
 
   // This gives you the value in the field equal to 3 to the
   // power of the value you pass in
@@ -82,10 +82,10 @@ var UTIL = (function() {
      0x1c, 0x24, 0x6c, 0xb4, 0xc7, 0x52, 0xf6, 0x01]);
   exp3.get = function(x) {
     if (x < 0 || x >= exp3.length) {
-      throw new Error("Invalid lookup into exp3 LUT.");
+      throw new Error('Invalid lookup into exp3 LUT.');
     }
     return exp3[x];
-  }
+  };
 
   // This one gives you the value in the field that
   // when multiplied with the value you passed in = 1
@@ -126,10 +126,10 @@ var UTIL = (function() {
      0xdd, 0x9c, 0x7d, 0xa0, 0xcd, 0x1a, 0x41, 0x1c]);
   multInv.get = function(x) {
     if (x < 1 || x >= multInv.length) {
-      throw new Error("Invalid lookup into multInv LUT.");
+      throw new Error('Invalid lookup into multInv LUT.');
     }
     return multInv[x];
-  }
+  };
 
   // Returns product of two numbers in GF(256).
   // mult1 and mult2 should both be integers between 0 and 255 inclusive.
@@ -201,7 +201,9 @@ var UTIL = (function() {
     var result = new Uint8Array(resultLength).fill(0);
 
     // Multiply the elements of the polynomials pairwise
-    var foilCoefficient, foilPower, foilIndex;
+    var foilCoefficient;
+    var foilPower;
+    var foilIndex;
     for (var i = 0; i < mult1.length; i++) {
       for (var j = 0; j < mult2.length; j++) {
         foilCoefficient = fieldMult(mult1[i], mult2[j]);
@@ -264,7 +266,8 @@ var UTIL = (function() {
   function polynomialEval(polynomial, value) {
     var valuePower = 1; // updated to represent value^i during loop
     var result = 0;
-    var term, coefficient;
+    var term;
+    var coefficient;
     for (var i = 0; i < polynomial.length; i++) {
       coefficient = polynomial[polynomial.length - 1 - i];
       term = fieldMult(coefficient, valuePower);
@@ -299,7 +302,7 @@ var UTIL = (function() {
   function mergeTypedArrays(arr1, arr2) {
     // Checks for truthy values on both arrays
     if (!arr1 && !arr2) {
-      throw new Error('Please specify valid arguments for parameters arr1 and arr2.');
+      throw new Error('Invalid array merge inputs.');
     }
 
     // Checks for truthy values or empty arrays on each argument
@@ -313,8 +316,10 @@ var UTIL = (function() {
     }
 
     // Make sure that both typed arrays are of the same type
-    if(Object.prototype.toString.call(arr1) !== Object.prototype.toString.call(arr2))
-        throw 'The types of the two arguments passed for parameters arr1 and arr2 do not match.';
+    if (Object.prototype.toString.call(arr1) !==
+        Object.prototype.toString.call(arr2)) {
+      throw 'Can\'t merge arrays of different types.';
+    }
 
     var result = new arr1.constructor(arr1.length + arr2.length);
     result.set(arr1);

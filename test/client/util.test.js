@@ -34,32 +34,44 @@ describe('The utility module', function() {
   it('performs polynomial addition in GF256 correctly.', function() {
     expect(UTIL.polynomialAdd(new Uint8Array([]), new Uint8Array([])))
       .to.deep.equal(new Uint8Array([]));
-    expect(UTIL.polynomialAdd(new Uint8Array([1, 2, 3]), new Uint8Array([0])))
+    expect(UTIL.polynomialAdd(new Uint8Array([1, 2, 3]),
+                              new Uint8Array([0])))
       .to.deep.equal(new Uint8Array([1, 2, 3]));
-    expect(UTIL.polynomialAdd(new Uint8Array([1, 1, 1]), new Uint8Array([1, 1, 1])))
-      .to.deep.equal(new Uint8Array([0, 0, 0])); // TOOD do we want to strip leading zeros?
-    expect(UTIL.polynomialAdd(new Uint8Array([47, 93]), new Uint8Array([103, 18])))
+    expect(UTIL.polynomialAdd(new Uint8Array([1, 1, 1]),
+                              new Uint8Array([1, 1, 1])))
+      .to.deep.equal(new Uint8Array([0, 0, 0])); // TODO strip leading zeros?
+    expect(UTIL.polynomialAdd(new Uint8Array([47, 93]),
+                              new Uint8Array([103, 18])))
       .to.deep.equal(new Uint8Array([72, 79]));
   });
 
   it('performs polynomial multiplication in GF256 correctly.', function() {
-    expect(UTIL.polynomialMult(new Uint8Array([0]), new Uint8Array([0])))
+    expect(UTIL.polynomialMult(new Uint8Array([0]),
+                               new Uint8Array([0])))
       .to.deep.equal(new Uint8Array([0]));
-    expect(UTIL.polynomialMult(new Uint8Array([0, 0, 0]), new Uint8Array([1, 2, 3])))
+    expect(UTIL.polynomialMult(new Uint8Array([0, 0, 0]),
+                               new Uint8Array([1, 2, 3])))
       .to.deep.equal(new Uint8Array([0]));
-    expect(UTIL.polynomialMult(new Uint8Array([1]), new Uint8Array([1])))
+    expect(UTIL.polynomialMult(new Uint8Array([1]),
+                               new Uint8Array([1])))
       .to.deep.equal(new Uint8Array([1]));
-    expect(UTIL.polynomialMult(new Uint8Array([42, 73]), new Uint8Array([1])))
+    expect(UTIL.polynomialMult(new Uint8Array([42, 73]),
+                               new Uint8Array([1])))
       .to.deep.equal(new Uint8Array([42, 73]));
-    expect(UTIL.polynomialMult(new Uint8Array([1]), new Uint8Array([42, 73])))
+    expect(UTIL.polynomialMult(new Uint8Array([1]),
+                               new Uint8Array([42, 73])))
       .to.deep.equal(new Uint8Array([42, 73]));
-    expect(UTIL.polynomialMult(new Uint8Array([1, 1]), new Uint8Array([1, 1])))
+    expect(UTIL.polynomialMult(new Uint8Array([1, 1]),
+                               new Uint8Array([1, 1])))
       .to.deep.equal(new Uint8Array([1, 0, 1]));
-    expect(UTIL.polynomialMult(new Uint8Array([1, 1, 1]), new Uint8Array([1, 1, 1])))
+    expect(UTIL.polynomialMult(new Uint8Array([1, 1, 1]),
+                               new Uint8Array([1, 1, 1])))
       .to.deep.equal(new Uint8Array([1, 0, 1, 0, 1]));
-    expect(UTIL.polynomialMult(new Uint8Array([1, 2, 3]), new Uint8Array([4, 5, 6])))
+    expect(UTIL.polynomialMult(new Uint8Array([1, 2, 3]),
+                               new Uint8Array([4, 5, 6])))
       .to.deep.equal(new Uint8Array([4, 13, 0, 3, 10]));
-    expect(UTIL.polynomialMult(new Uint8Array([253, 254, 255]), new Uint8Array([253, 254, 255])))
+    expect(UTIL.polynomialMult(new Uint8Array([253, 254, 255]),
+                               new Uint8Array([253, 254, 255])))
       .to.deep.equal(new Uint8Array([23, 0, 18, 0, 19]));
   });
 
@@ -100,13 +112,17 @@ describe('The utility module', function() {
   });
 
   it('merges typed arrays correctly.', function() {
-    expect(UTIL.mergeTypedArrays(new Uint8Array([]), new Uint8Array([])))
+    expect(UTIL.mergeTypedArrays(new Uint8Array([]),
+                                 new Uint8Array([])))
       .to.deep.equal(new Uint8Array([]));
-    expect(UTIL.mergeTypedArrays(new Uint8Array([]), new Uint8Array([1, 2, 3])))
+    expect(UTIL.mergeTypedArrays(new Uint8Array([]),
+                                 new Uint8Array([1, 2, 3])))
       .to.deep.equal(new Uint8Array([1, 2, 3]));
-    expect(UTIL.mergeTypedArrays(new Uint8Array([1, 2, 3]), new Uint8Array([])))
+    expect(UTIL.mergeTypedArrays(new Uint8Array([1, 2, 3]),
+                                 new Uint8Array([])))
       .to.deep.equal(new Uint8Array([1, 2, 3]));
-    expect(UTIL.mergeTypedArrays(new Uint8Array([1, 2]), new Uint8Array([3, 4])))
+    expect(UTIL.mergeTypedArrays(new Uint8Array([1, 2]),
+                                 new Uint8Array([3, 4])))
       .to.deep.equal(new Uint8Array([1, 2, 3, 4]));
   });
 });
