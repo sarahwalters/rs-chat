@@ -47,7 +47,7 @@ var RS = (function() {
     if (errors) {
       // Perform B-M decoding
       var syndromes = computeSyndromePoly(receivedMsg, n, k);
-      var bm = performBerlekampMassey(syndromes, n, k);
+      var bm = berlekampMassey(syndromes, n, k);
       var errorLocations = chienSearch(bm.errorLocationPoly);
       var errorMagnitudes = forneysFormula(errorLocations,
                                            bm.errorMagnitudePoly);
@@ -91,7 +91,13 @@ var RS = (function() {
     return syndromes;
   }
 
-  function performBerlekampMassey(syndromePoly, n, k) {
+  // Performs the Berlekamp-Massey algorithm on a syndrome polynomial for
+  // a certain n and k. Iterates (n-k) times to fit the BM "key equation".
+  // Returns an error location polynomial and an error magnitude polynomial.
+  // Input syndromePoly and returns errorLocationPoly and errorMagnitudePoly are
+  // big-endian arrays representing polynomials, i.e. [1,2,3] -> x^2 + 2x + 3
+  // Inputs n and k are integers
+  function berlekampMassey(syndromePoly, n, k) {
     // Compute 1 + syndromePoly in GF (copying to avoid modifying input)
     // Changes the 0 in the z^0 place in syndromePoly to a 1, which we need mathematically
     var syndromePolyPlusOne = syndromePoly.slice(0);
@@ -119,7 +125,7 @@ var RS = (function() {
     var scaledTau;
     var scaledGamma;
     var DThreshold;
-    for (var i = 0; i < n - k + 1; i++) {
+    for (var i = 0; i <= n - k; i++) {
       // Compute the left-hand side of the key equation
       lhs = UTIL.polynomialMult(sigmas[i], syndromePolyPlusOne);
 
@@ -162,6 +168,13 @@ var RS = (function() {
     };
   }
 
+  // Performs a Chien search on an error location polynomial to find the set of
+  // error locations.
+  // Input errorLocationPoly is a big-endian array representing a polynomial,
+  // i.e. [1,2,3] -> x^2 + 2x + 3
+  // Output is a set of integers in GF(256), each of which is an error location, GEN^power
+  // -> i.e. taking log3 of an element in the set would give you the error position,
+  // the power at which the error occurred.
   function chienSearch(errorLocationPoly) {
     var xis = [];
     for (var v = 0; v < 256; v++) {
@@ -173,6 +186,12 @@ var RS = (function() {
     return xis;
   }
 
+  // Performs Forney's Formula on a set of error locations and an error magnitude
+  // polynomial to find the set of error magnitudes.
+  // Input errorLocations is a set of integers in GF(256)
+  // Input errorMagnitudePoly is a big-endian array representing a polynomial,
+  // i.e. [1,2,3] -> x^2 + 2x + 3
+  // Output errorMagnitudes is a set of integers in GF(256)
   function forneysFormula(errorLocations, errorMagnitudePoly) {
     var errorMagnitudes = errorLocations.map(function(xi, i) {
       var invXi = UTIL.multInv(xi);
@@ -195,7 +214,16 @@ var RS = (function() {
     return errorMagnitudes;
   }
 
+  // Repairs a received codeword using computed error locations and error magnitudes.
+  // Input received is an array of length n
+  // Inputs errorLocations and errorMagnitudes are arrays of matching length
+  // Return codeword is an array of length n
   function repair(received, errorLocations, errorMagnitudes) {
+    if (!errorLocations || !errorMagnitudes ||
+        errorLocations.length != errorMagnitudes.length) {
+      throw new Error('Invalid error locations or magnitudes.');
+    }
+
     var errorIndices = errorLocations.map(function(location) {
       return received.length - 1 - UTIL.log3(location);
     });
