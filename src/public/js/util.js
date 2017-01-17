@@ -194,10 +194,10 @@ var UTIL = (function() {
   // Both mult1 and mult2 are big-endian arrays of integers which
   // represent polynomials (so, [1,2,3] is x^2 + 2*x + 3)
   function polynomialMult(mult1, mult2) {
-    // Handle the zero case
     mult1 = trimLeadingZeros(mult1);
     mult2 = trimLeadingZeros(mult2);
 
+    // Handle the zero case
     if (mult1.length == 0 || mult2.length == 0) {
       return new Uint8Array([0]);
     }
