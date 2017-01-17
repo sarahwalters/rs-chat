@@ -2,15 +2,25 @@ describe('The utility module', function() {
   // TODO throw expects throughout?
 
   it('performs exponentiation in GF256 correctly.', function() {
-    // TODO (?)
+    expect(UTIL.exp3(0)).to.equal(1);
+    expect(UTIL.exp3(1)).to.equal(3);
+    expect(function() { UTIL.exp3(-1); }).to.throw(Error);
+    expect(function() { UTIL.exp3(256); }).to.throw(Error);
   });
 
   it('performs logarithms in GF256 correctly.', function() {
-    // TODO (?)
+    expect(UTIL.log3(3)).to.equal(1);
+    expect(UTIL.log3(5)).to.equal(2);
+    expect(function() { UTIL.log3(-1); }).to.throw(Error);
+    expect(function() { UTIL.log3(0); }).to.throw(Error);
+    expect(function() { UTIL.log3(256); }).to.throw(Error);
   });
 
   it('performs multiplicative inverses in GF256 correctly.', function() {
-    // TODO (?)
+    expect(UTIL.multInv(1)).to.equal(1);
+    expect(function() { UTIL.multInv(-1); }).to.throw(Error);
+    expect(function() { UTIL.multInv(0); }).to.throw(Error);
+    expect(function() { UTIL.multInv(256); }).to.throw(Error);
   });
 
   it('performs field multiplication in GF256 correctly.', function() {
@@ -27,20 +37,19 @@ describe('The utility module', function() {
     expect(UTIL.fieldDiv(42, 1)).to.equal(42);
     expect(UTIL.fieldDiv(143, 24)).to.equal(156);
     expect(UTIL.fieldDiv(78, 200)).to.equal(7);
-
-    // TODO definitely want a dividend-is-zero throw expect here
+    expect(function() { UTIL.fieldDiv(1, 0); }).to.throw(Error);
   });
 
   it('performs polynomial addition in GF256 correctly.', function() {
     expect(UTIL.polynomialAdd(new Uint8Array([]),
                               new Uint8Array([])))
-      .to.deep.equal(new Uint8Array([0]));
+      .to.deep.equal(new Uint8Array([]));
     expect(UTIL.polynomialAdd(new Uint8Array([1, 2, 3]),
                               new Uint8Array([0])))
       .to.deep.equal(new Uint8Array([1, 2, 3]));
     expect(UTIL.polynomialAdd(new Uint8Array([1, 1, 1]),
                               new Uint8Array([1, 1, 1])))
-      .to.deep.equal(new Uint8Array([0]));
+      .to.deep.equal(new Uint8Array([]));
     expect(UTIL.polynomialAdd(new Uint8Array([47, 93]),
                               new Uint8Array([103, 18])))
       .to.deep.equal(new Uint8Array([72, 79]));
@@ -49,10 +58,10 @@ describe('The utility module', function() {
   it('performs polynomial multiplication in GF256 correctly.', function() {
     expect(UTIL.polynomialMult(new Uint8Array([0]),
                                new Uint8Array([0])))
-      .to.deep.equal(new Uint8Array([0]));
+      .to.deep.equal(new Uint8Array([]));
     expect(UTIL.polynomialMult(new Uint8Array([0, 0, 0]),
                                new Uint8Array([1, 2, 3])))
-      .to.deep.equal(new Uint8Array([0]));
+      .to.deep.equal(new Uint8Array([]));
     expect(UTIL.polynomialMult(new Uint8Array([1]),
                                new Uint8Array([1])))
       .to.deep.equal(new Uint8Array([1]));
@@ -101,9 +110,9 @@ describe('The utility module', function() {
 
   it('performs polynomial scaling in GF256 correctly.', function() {
     expect(UTIL.polynomialScale(new Uint8Array([0]), 0))
-     .to.deep.equal(new Uint8Array([0]));
+     .to.deep.equal(new Uint8Array([]));
     expect(UTIL.polynomialScale(new Uint8Array([0]), 1))
-     .to.deep.equal(new Uint8Array([0]));
+     .to.deep.equal(new Uint8Array([]));
     expect(UTIL.polynomialScale(new Uint8Array([42, 42, 42]), 1))
      .to.deep.equal(new Uint8Array([42, 42, 42]));
     expect(UTIL.polynomialScale(new Uint8Array([1, 1, 1]), 42))

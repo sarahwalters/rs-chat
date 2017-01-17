@@ -165,7 +165,7 @@ var UTIL = (function() {
         return arr.slice(i);
       }
     }
-    return new arr.constructor([0]);
+    return new arr.constructor(0);
   }
 
   // Returns sum of two polynomials in GF(256).
@@ -199,7 +199,7 @@ var UTIL = (function() {
 
     // Handle the zero case
     if (mult1.length == 0 || mult2.length == 0) {
-      return new Uint8Array([0]);
+      return new Uint8Array(0);
     }
 
     // Each polynomial mult has degree mult.length - 1;
@@ -222,7 +222,7 @@ var UTIL = (function() {
       }
     }
 
-    return trimLeadingZeros(result);
+    return result;
   }
 
   // Returns quotient of two polynomials in GF(256).
@@ -289,11 +289,15 @@ var UTIL = (function() {
   // polynomial is represented as a big-endian array, IE: [1,2,3] -> x^2 + 2x + 3
   // value is represented as an integer
   function polynomialScale(polynomial, scalar) {
+    if (scalar == 0) {
+      return new Uint8Array(0);
+    }
+    polynomial = trimLeadingZeros(polynomial);
     var scaledPolynomial = new Uint8Array(polynomial.length);
     for (var i = 0; i < polynomial.length; i++) {
       scaledPolynomial[i] = fieldMult(polynomial[i], scalar);
     }
-    return trimLeadingZeros(scaledPolynomial);
+    return scaledPolynomial;
   }
 
   function shift(msg, rot) {
