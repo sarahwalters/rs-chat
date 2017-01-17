@@ -48,29 +48,26 @@ var RS = (function() {
       // Perform B-M decoding
       var syndromes = computeSyndromePoly(receivedMsg, n, k);
       var bm = berlekampMassey(syndromes, n, k);
-      var errorLocations = chienSearch(bm.errorLocationPoly);
+      var errorLocations = findErrorLocations(bm.errorLocationPoly);
       var errorMagnitudes = forneysFormula(errorLocations,
-                                           bm.errorMagnitudePoly);
-      var repairedMsg = repair(receivedMsg, errorLocations, errorMagnitudes);
+                                           bm.errorEvaluatorPoly);
+      repair(receivedMsg, errorLocations, errorMagnitudes);
 
       // Check that the repaired message is in fact divisible by genPoly
-      var repairedRemainder = UTIL.polynomialDiv(repairedMsg, genPoly, n, k);
+      var repairedRemainder = UTIL.polynomialDiv(receivedMsg, genPoly, n, k);
       var repairedErrors = false;
       for (var i = 0; i < n - k; i++) {
         if (repairedRemainder[i] != 0) {
           throw new Error('Too many errors to decode.');
         }
       }
-
-      return repairedMsg.slice(0, k);
-    } else {
-      return receivedMsg.slice(0, k);
     }
+    return receivedMsg.slice(0, k);
   }
 
-  // Computes a syndrome polynomial for the specified received message
-  // by evaluating the received message at n-k consecutive powers of
-  // the generator element within Galois Field 256
+  // Computes a syndrome polynomial (the sum from i = 0 to n-k of Si*X^i)
+  // for the specified received message by evaluating the received message
+  // at n-k consecutive powers of the generator element within Galois Field 256
   // receivedMsg is an array of length n
   // n specifies the length of the codeword / received message
   // k specifies the length of the original message
@@ -94,7 +91,7 @@ var RS = (function() {
   // Performs the Berlekamp-Massey algorithm on a syndrome polynomial for
   // a certain n and k. Iterates (n-k) times to fit the BM "key equation".
   // Returns an error location polynomial and an error magnitude polynomial.
-  // Input syndromePoly and returns errorLocationPoly and errorMagnitudePoly are
+  // Input syndromePoly and returns errorLocationPoly and errorEvaluatorPoly are
   // big-endian arrays representing polynomials, i.e. [1,2,3] -> x^2 + 2x + 3
   // Inputs n and k are integers
   function berlekampMassey(syndromePoly, n, k) {
@@ -164,38 +161,38 @@ var RS = (function() {
 
     return {
       errorLocationPoly: sigmas[n - k],
-      errorMagnitudePoly: omegas[n - k]
+      errorEvaluatorPoly: omegas[n - k]
     };
   }
 
-  // Performs a Chien search on an error location polynomial to find the set of
-  // error locations.
+  // Determines the set of error locations by finding roots of the error
+  // location polynomial.
   // Input errorLocationPoly is a big-endian array representing a polynomial,
   // i.e. [1,2,3] -> x^2 + 2x + 3
   // Output is a set of integers in GF(256), each of which is an error location, GEN^power
   // -> i.e. taking log3 of an element in the set would give you the error position,
   // the power at which the error occurred.
-  function chienSearch(errorLocationPoly) {
-    var xis = [];
+  function findErrorLocations(errorLocationPoly) {
+    var errorLocations = [];
     for (var v = 0; v < 256; v++) {
       var res = UTIL.polynomialEval(errorLocationPoly, v);
       if (res == 0) {
-        xis.push(UTIL.multInv(v));
+        errorLocations.push(UTIL.multInv(v));
       }
     }
-    return xis;
+    return errorLocations;
   }
 
   // Performs Forney's Formula on a set of error locations and an error magnitude
   // polynomial to find the set of error magnitudes.
   // Input errorLocations is a set of integers in GF(256)
-  // Input errorMagnitudePoly is a big-endian array representing a polynomial,
+  // Input errorEvaluatorPoly is a big-endian array representing a polynomial,
   // i.e. [1,2,3] -> x^2 + 2x + 3
   // Output errorMagnitudes is a set of integers in GF(256)
-  function forneysFormula(errorLocations, errorMagnitudePoly) {
+  function forneysFormula(errorLocations, errorEvaluatorPoly) {
     var errorMagnitudes = errorLocations.map(function(xi, i) {
       var invXi = UTIL.multInv(xi);
-      var numerator = UTIL.polynomialEval(errorMagnitudePoly, invXi);
+      var numerator = UTIL.polynomialEval(errorEvaluatorPoly, invXi);
 
       var denominator = 1;
       var xj;
@@ -203,7 +200,7 @@ var RS = (function() {
       for (var j = 0; j < errorLocations.length; j++) {
         xj = errorLocations[j];
         if (j != i) {
-          productTerm = (1 ^ UTIL.fieldMult(xj, invXi));
+          productTerm = 1 ^ UTIL.fieldMult(xj, invXi); // Galois extension field addition is xor with base field 2
           denominator = UTIL.fieldMult(denominator, productTerm);
         }
       }
@@ -214,10 +211,10 @@ var RS = (function() {
     return errorMagnitudes;
   }
 
-  // Repairs a received codeword using computed error locations and error magnitudes.
+  // Repairs a received codeword in place using computed error locations
+  // and error magnitudes.
   // Input received is an array of length n
   // Inputs errorLocations and errorMagnitudes are arrays of matching length
-  // Return codeword is an array of length n
   function repair(received, errorLocations, errorMagnitudes) {
     if (!errorLocations || !errorMagnitudes ||
         errorLocations.length != errorMagnitudes.length) {
@@ -228,14 +225,11 @@ var RS = (function() {
       return received.length - 1 - UTIL.log3(location);
     });
 
-    var corrected = received.slice(0);
     var errorIndex;
     for (var i = 0; i < errorIndices.length; i++) {
       errorIndex = errorIndices[i];
-      corrected[errorIndex] ^= errorMagnitudes[i];
+      received[errorIndex] ^= errorMagnitudes[i];
     }
-
-    return corrected;
   }
 
   // TESTING RS DECODING -- TODO REMOVE

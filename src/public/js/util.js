@@ -293,11 +293,10 @@ var UTIL = (function() {
       return new Uint8Array(0);
     }
     polynomial = trimLeadingZeros(polynomial);
-    var scaledPolynomial = new Uint8Array(polynomial.length);
     for (var i = 0; i < polynomial.length; i++) {
-      scaledPolynomial[i] = fieldMult(polynomial[i], scalar);
+      polynomial[i] = fieldMult(polynomial[i], scalar);
     }
-    return scaledPolynomial;
+    return polynomial;
   }
 
   function shift(msg, rot) {
