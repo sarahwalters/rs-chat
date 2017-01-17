@@ -138,9 +138,7 @@ var UTIL = (function() {
       return 0;
     }
     var t = log3.get(mult1) + log3.get(mult2);
-    if (t > 255) {
-      t = t - 255;
-    }
+    t = t % 255;
     return exp3.get(t);
   }
 
@@ -159,29 +157,37 @@ var UTIL = (function() {
     return exp3.get(t);
   }
 
+  // Trims leading zeros off of an array
+  // arr should be an array or typed array of integers
+  function trimLeadingZeros(arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i] != 0) {
+        return arr.slice(i);
+      }
+    }
+    return new arr.constructor([0]);
+  }
+
   // Returns sum of two polynomials in GF(256).
   // Both addend1 and addend2 are big-endian arrays of integers which
   // represent polynomials (so, [1,2,3] is x^2 + 2*x + 3)
   function polynomialAdd(addend1, addend2) {
-    var resultLength = Math.max(addend1.length, addend2.length);
-    var result = new Uint8Array(resultLength);
-    var digit;
-    for (var i = 0; i < resultLength; i++) {
-      digit = 0;
-      if (i < addend1.length) {
-        digit ^= addend1[addend1.length - 1 - i];
-      }
-      if (i < addend2.length) {
-        digit ^= addend2[addend2.length - 1 - i];
-      }
-      result[resultLength - 1 - i] = digit;
+    // Copy the longer array as the result & name the shorter array the addend
+    var result;
+    var addend;
+    if (addend1.length > addend2.length) {
+      result = addend1.slice(0);
+      addend = addend2;
+    } else {
+      result = addend2.slice(0);
+      addend = addend1;
     }
-    return result;
-  }
 
-  // Helper function for polynomial multiplication
-  function isZero(n) {
-    return n == 0;
+    for (var i = 1; i <= addend.length; i++) {
+      result[result.length - i] ^= addend[addend.length - i]; // Galois extension field addition is xor with base field 2
+    }
+
+    return trimLeadingZeros(result);
   }
 
   // Returns product of two polynomials in GF(256).
@@ -189,7 +195,10 @@ var UTIL = (function() {
   // represent polynomials (so, [1,2,3] is x^2 + 2*x + 3)
   function polynomialMult(mult1, mult2) {
     // Handle the zero case
-    if (mult1.every(isZero) || mult2.every(isZero)) {
+    mult1 = trimLeadingZeros(mult1);
+    mult2 = trimLeadingZeros(mult2);
+
+    if (mult1.length == 0 || mult2.length == 0) {
       return new Uint8Array([0]);
     }
 
@@ -198,7 +207,7 @@ var UTIL = (function() {
     // gives a polynomial of degree (a-1)+(b-1) = a + b - 2
     // ...which corresponds to a polynomial array of length a + b - 1
     var resultLength = mult1.length + mult2.length - 1;
-    var result = new Uint8Array(resultLength).fill(0);
+    var result = new Uint8Array(resultLength);
 
     // Multiply the elements of the polynomials pairwise
     var foilCoefficient;
@@ -209,11 +218,11 @@ var UTIL = (function() {
         foilCoefficient = fieldMult(mult1[i], mult2[j]);
         foilPower = (mult1.length - 1 - i) + (mult2.length - 1 - j);
         foilIndex = resultLength - 1 - foilPower;
-        result[foilIndex] ^= foilCoefficient; // GF addition is xor with base field 2
+        result[foilIndex] ^= foilCoefficient; // Galois extension field addition is xor with base field 2
       }
     }
 
-    return result;
+    return trimLeadingZeros(result);
   }
 
   // Returns quotient of two polynomials in GF(256).
@@ -243,8 +252,7 @@ var UTIL = (function() {
       // Subtract scaled divisor from current remainder of dividend
       // to get new remainder of dividend which will be 1 order less
       for (var j = i; j < i + divLen; j++) {
-        // Galois extension field subtraction is xor with base field 2
-        dividend[j] = dividend[j] ^ scaledDivisor[j - i];
+        dividend[j] = dividend[j] ^ scaledDivisor[j - i]; // Galois extension field subtraction is xor with base field 2
       }
     }
 
@@ -257,7 +265,7 @@ var UTIL = (function() {
       }
     }
 
-    return remainder;
+    return trimLeadingZeros(remainder);
   }
 
   // Returns evaluation in GF(256) of polynomial at value
@@ -268,13 +276,12 @@ var UTIL = (function() {
     var result = 0;
     var term;
     var coefficient;
-    for (var i = 0; i < polynomial.length; i++) {
-      coefficient = polynomial[polynomial.length - 1 - i];
+    for (var i = 1; i <= polynomial.length; i++) {
+      coefficient = polynomial[polynomial.length - i];
       term = fieldMult(coefficient, valuePower);
       result = result ^ term; // Galois extension field addition is xor with base field 2
       valuePower = fieldMult(valuePower, value);
     }
-
     return result;
   }
 
@@ -286,7 +293,7 @@ var UTIL = (function() {
     for (var i = 0; i < polynomial.length; i++) {
       scaledPolynomial[i] = fieldMult(polynomial[i], scalar);
     }
-    return scaledPolynomial;
+    return trimLeadingZeros(scaledPolynomial);
   }
 
   function shift(msg, rot) {
@@ -309,10 +316,10 @@ var UTIL = (function() {
     // to avoid the unnecessary construction of a new array and
     // the type comparison
     if (!arr2 || arr2.length === 0) {
-      return arr1;
+      return arr1.slice(0);
     }
     if (!arr1 || arr1.length === 0) {
-      return arr2;
+      return arr2.slice(0);
     }
 
     // Make sure that both typed arrays are of the same type

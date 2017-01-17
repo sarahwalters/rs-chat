@@ -23,7 +23,7 @@ var RS = (function() {
   // The largest order coefficient is the [0] element of msg so as
   // to maintain the ordering of [msg, code symbols] in the coded msg.
   function encodeRSBlock(msg, n, k) {
-    var paddedMsg = UTIL.mergeTypedArrays(msg, new Uint8Array(n - k).fill(0));
+    var paddedMsg = UTIL.mergeTypedArrays(msg, new Uint8Array(n - k));
     var remainder = UTIL.polynomialDiv(paddedMsg, genPoly, n, k);
     var codedMsg = new Uint8Array(n);
     for (var i = 0; i < k; i++) {

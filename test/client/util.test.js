@@ -32,14 +32,15 @@ describe('The utility module', function() {
   });
 
   it('performs polynomial addition in GF256 correctly.', function() {
-    expect(UTIL.polynomialAdd(new Uint8Array([]), new Uint8Array([])))
-      .to.deep.equal(new Uint8Array([]));
+    expect(UTIL.polynomialAdd(new Uint8Array([]),
+                              new Uint8Array([])))
+      .to.deep.equal(new Uint8Array([0]));
     expect(UTIL.polynomialAdd(new Uint8Array([1, 2, 3]),
                               new Uint8Array([0])))
       .to.deep.equal(new Uint8Array([1, 2, 3]));
     expect(UTIL.polynomialAdd(new Uint8Array([1, 1, 1]),
                               new Uint8Array([1, 1, 1])))
-      .to.deep.equal(new Uint8Array([0, 0, 0])); // TODO strip leading zeros?
+      .to.deep.equal(new Uint8Array([0]));
     expect(UTIL.polynomialAdd(new Uint8Array([47, 93]),
                               new Uint8Array([103, 18])))
       .to.deep.equal(new Uint8Array([72, 79]));
