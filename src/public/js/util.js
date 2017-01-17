@@ -265,7 +265,7 @@ var UTIL = (function() {
       }
     }
 
-    return trimLeadingZeros(remainder);
+    return remainder; // trimLeadingZeros breaks this -- length expectations
   }
 
   // Returns evaluation in GF(256) of polynomial at value
