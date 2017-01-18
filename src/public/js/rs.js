@@ -101,20 +101,20 @@ var RS = (function() {
     syndromePolyPlusOne[syndromePoly.length - 1] ^= 1;
 
     // Initial conditions
-    var sigmas = new Array(n - k + 1);
-    var omegas = new Array(n - k + 1);
-    var taus = new Array(n - k + 1);
-    var gammas = new Array(n - k + 1);
-    var Ds = new Array(n - k + 1);
-    var Bs = new Array(n - k + 1);
-    sigmas[0] = new Uint8Array([1]);
-    omegas[0] = new Uint8Array([1]);
-    taus[0] = new Uint8Array([1]);
-    gammas[0] = new Uint8Array([0]);
-    Ds[0] = 0;
-    Bs[0] = false;
+    var nextSigma = new Uint8Array([1]);
+    var nextOmega = new Uint8Array([1]);
+    var nextTau = new Uint8Array([1]);
+    var nextGamma = new Uint8Array([0]);
+    var nextD = 0;
+    var nextB = false;
 
     // Perform n-k iterations
+    var sigma;
+    var omega;
+    var tau;
+    var gamma;
+    var D;
+    var B;
     var lhs;
     var delta;
     var shiftedTau;
@@ -123,45 +123,56 @@ var RS = (function() {
     var scaledGamma;
     var DThreshold;
     for (var i = 0; i <= n - k; i++) {
+      sigma = nextSigma;
+      omega = nextOmega;
+      tau = nextTau;
+      gamma = nextGamma;
+      D = nextD;
+      B = nextB;
+
       // Compute the left-hand side of the key equation
-      lhs = UTIL.polynomialMult(sigmas[i], syndromePolyPlusOne);
+      lhs = UTIL.polynomialMult(sigma, syndromePolyPlusOne);
 
       // Delta is the coefficient of z^(i+1)
       delta = lhs[(lhs.length - 1) - (i + 1)];
 
       // Use tau and gamma to update sigma and omega:
-      shiftedTau = UTIL.mergeTypedArrays(taus[i], new Uint8Array([0])); // z * tau
-      shiftedGamma = UTIL.mergeTypedArrays(gammas[i], new Uint8Array([0])); // z * gamma
+      shiftedTau = UTIL.mergeTypedArrays(tau, new Uint8Array([0])); // z * tau
+      shiftedGamma = UTIL.mergeTypedArrays(gamma, new Uint8Array([0])); // z * gamma
       scaledTau = UTIL.polynomialScale(shiftedTau, delta); // delta * z * tau
       scaledGamma = UTIL.polynomialScale(shiftedGamma, delta); // delta * z * gamma
-      sigmas[i + 1] = UTIL.polynomialAdd(sigmas[i], scaledTau);
-      omegas[i + 1] = UTIL.polynomialAdd(omegas[i], scaledGamma);
+      nextSigma = UTIL.polynomialAdd(sigma, scaledTau);
+      nextOmega = UTIL.polynomialAdd(omega, scaledGamma);
 
       // Follow the B-M iteration rules to update tau and gamma:
       DThreshold = (i + 1) / 2;
-      if (delta == 0 || Ds[i] > DThreshold || (Ds[i] == DThreshold && !Bs[i])) {
+      if (delta == 0 || D > DThreshold || (D == DThreshold && !B)) {
         // RULE A
-        taus[i + 1] = UTIL.mergeTypedArrays(taus[i], new Uint8Array([0]));
-        gammas[i + 1] = UTIL.mergeTypedArrays(gammas[i], new Uint8Array([0]));
+        nextTau = UTIL.mergeTypedArrays(tau, new Uint8Array([0]));
+        nextGamma = UTIL.mergeTypedArrays(gamma, new Uint8Array([0]));
+        nextD = D;
+        nextB = B;
       } else {
         // RULE B
         var invDelta = UTIL.multInv(delta);
-        taus[i + 1] = UTIL.polynomialScale(sigmas[i], invDelta);
-        gammas[i + 1] = UTIL.polynomialScale(omegas[i], invDelta);
+        nextTau = UTIL.polynomialScale(sigma, invDelta);
+        nextGamma = UTIL.polynomialScale(omega, invDelta);
 
         // Update the D tracker
-        Ds[i + 1] = i + 1 - Ds[i];
+        nextD = i + 1 - D;
 
         // If the equality case triggered, turn the B flag off
-        if (Ds[i] == DThreshold) {
-          Bs[i + 1] = false;
+        if (D == DThreshold) {
+          nextB = false;
+        } else {
+          nextB = B;
         }
       }
     }
 
     return {
-      errorLocationPoly: sigmas[n - k],
-      errorEvaluatorPoly: omegas[n - k]
+      errorLocationPoly: sigma,
+      errorEvaluatorPoly: omega
     };
   }
 
