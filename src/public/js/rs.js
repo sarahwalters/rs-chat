@@ -122,7 +122,7 @@ var RS = (function() {
     var scaledTau;
     var scaledGamma;
     var DThreshold;
-    for (var i = 0; i <= n - k; i++) {
+    for (var i = 0; i < n - k; i++) {
       sigma = nextSigma;
       omega = nextOmega;
       tau = nextTau;
@@ -171,8 +171,8 @@ var RS = (function() {
     }
 
     return {
-      errorLocationPoly: sigma,
-      errorEvaluatorPoly: omega
+      errorLocationPoly: nextSigma,
+      errorEvaluatorPoly: nextOmega
     };
   }
 
