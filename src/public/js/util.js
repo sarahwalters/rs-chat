@@ -1,4 +1,4 @@
-`use strict`;
+'use strict';
 var UTIL = (function() {
   var GEN = 3;
 
@@ -38,6 +38,12 @@ var UTIL = (function() {
      0xb4, 0x7c, 0xb8, 0x26, 0x77, 0x99, 0xe3, 0xa5,
      0x67, 0x4a, 0xed, 0xde, 0xc5, 0x31, 0xfe, 0x18,
      0x0d, 0x63, 0x8c, 0x80, 0xc0, 0xf7, 0x70, 0x07]);
+  log3.get = function(x) {
+    if (x < 1 || x >= log3.length) {
+      throw new Error('Invalid lookup into log3 LUT.');
+    }
+    return log3[x];
+  };
 
   // This gives you the value in the field equal to 3 to the
   // power of the value you pass in
@@ -74,6 +80,12 @@ var UTIL = (function() {
      0x8f, 0x8a, 0x85, 0x94, 0xa7, 0xf2, 0x0d, 0x17,
      0x39, 0x4b, 0xdd, 0x7c, 0x84, 0x97, 0xa2, 0xfd,
      0x1c, 0x24, 0x6c, 0xb4, 0xc7, 0x52, 0xf6, 0x01]);
+  exp3.get = function(x) {
+    if (x < 0 || x >= exp3.length) {
+      throw new Error('Invalid lookup into exp3 LUT.');
+    }
+    return exp3[x];
+  };
 
   // This one gives you the value in the field that
   // when multiplied with the value you passed in = 1
@@ -112,39 +124,110 @@ var UTIL = (function() {
      0x08, 0x4e, 0xd7, 0xe3, 0x5d, 0x50, 0x1e, 0xb3,
      0x5b, 0x23, 0x38, 0x34, 0x68, 0x46, 0x03, 0x8c,
      0xdd, 0x9c, 0x7d, 0xa0, 0xcd, 0x1a, 0x41, 0x1c]);
-
-  function fieldDivide(dividend, divisor) {
-    if (divisor == 0) {
-      throw new Error('Can\'t divide by 0');
-    } else if (dividend == 0) {
-      return 0;
+  multInv.get = function(x) {
+    if (x < 1 || x >= multInv.length) {
+      throw new Error('Invalid lookup into multInv LUT.');
     }
-    var t = log3[dividend] - log3[divisor];
-    if (t < 0) {
-      t = t + 255;
-    }
-    return exp3[t];
-  }
+    return multInv[x];
+  };
 
-  function fieldMultiply(mult1, mult2) {
+  // Returns product of two numbers in GF(256).
+  // mult1 and mult2 should both be integers between 0 and 255 inclusive.
+  function fieldMult(mult1, mult2) {
     if (mult1 == 0 || mult2 == 0) {
       return 0;
     }
-    var t = log3[mult1] + log3[mult2];
-    if (t > 255) {
-      t = t - 255;
+    var t = log3.get(mult1) + log3.get(mult2);
+    t = t % 255;
+    return exp3.get(t);
+  }
+
+  // Returns quotient of two numbers in GF(256).
+  // dividend and divisor should both be integers between 0 and 255 inclusive.
+  function fieldDiv(dividend, divisor) {
+    if (divisor == 0) {
+      throw new Error('Can\'t divide by 0.');
+    } else if (dividend == 0) {
+      return 0;
     }
-    return exp3[t];
+    var t = log3.get(dividend) - log3.get(divisor);
+    if (t < 0) {
+      t = t + 255;
+    }
+    return exp3.get(t);
   }
 
-  function shift(msg, rot) {
-    return msg.split('').reduce(function(accumulator, letter, index) {
-      var shiftedCharCode = letter.charCodeAt() + rot;
-      var shiftedLetter = String.fromCharCode(shiftedCharCode);
-      return accumulator + shiftedLetter;
-    }, '');
+  // Trims leading zeros off of an array
+  // arr should be an array or typed array of integers
+  function trimLeadingZeros(arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i] != 0) {
+        return arr.slice(i);
+      }
+    }
+    return new arr.constructor(0);
   }
 
+  // Returns sum of two polynomials in GF(256).
+  // Both addend1 and addend2 are big-endian arrays of integers which
+  // represent polynomials (so, [1,2,3] is x^2 + 2*x + 3)
+  function polynomialAdd(addend1, addend2) {
+    // Copy the longer array as the result & name the shorter array the addend
+    var result;
+    var addend;
+    if (addend1.length > addend2.length) {
+      result = addend1.slice(0);
+      addend = addend2;
+    } else {
+      result = addend2.slice(0);
+      addend = addend1;
+    }
+
+    for (var i = 1; i <= addend.length; i++) {
+      result[result.length - i] ^= addend[addend.length - i]; // Galois extension field addition is xor with base field 2
+    }
+
+    return trimLeadingZeros(result);
+  }
+
+  // Returns product of two polynomials in GF(256).
+  // Both mult1 and mult2 are big-endian arrays of integers which
+  // represent polynomials (so, [1,2,3] is x^2 + 2*x + 3)
+  function polynomialMult(mult1, mult2) {
+    mult1 = trimLeadingZeros(mult1);
+    mult2 = trimLeadingZeros(mult2);
+
+    // Handle the zero case
+    if (mult1.length == 0 || mult2.length == 0) {
+      return new Uint8Array(0);
+    }
+
+    // Each polynomial mult has degree mult.length - 1;
+    // Multiplying a polynomial of degree (a-1) by a polynomial of degree (b-1)
+    // gives a polynomial of degree (a-1)+(b-1) = a + b - 2
+    // ...which corresponds to a polynomial array of length a + b - 1
+    var resultLength = mult1.length + mult2.length - 1;
+    var result = new Uint8Array(resultLength);
+
+    // Multiply the elements of the polynomials pairwise
+    var foilCoefficient;
+    var foilPower;
+    var foilIndex;
+    for (var i = 0; i < mult1.length; i++) {
+      for (var j = 0; j < mult2.length; j++) {
+        foilCoefficient = fieldMult(mult1[i], mult2[j]);
+        foilPower = (mult1.length - 1 - i) + (mult2.length - 1 - j);
+        foilIndex = resultLength - 1 - foilPower;
+        result[foilIndex] ^= foilCoefficient; // Galois extension field addition is xor with base field 2
+      }
+    }
+
+    return result;
+  }
+
+  // Returns quotient of two polynomials in GF(256).
+  // Both dividend and divisor are big-endian arrays of integers which
+  // represent polynomials (so, [1,2,3] is x^2 + 2*x + 3)
   function polynomialDiv(dividend, divisor, n, k) {
     // Make a copy of dividend to avoid modifying input
     dividend = dividend.slice(0);
@@ -164,16 +247,12 @@ var UTIL = (function() {
       // Find scaled divisor to subtract from current remainder of dividend
       // by multiplying each coefficient of precomputed divisor by current
       // highest order quotient
-      var scaledDivisor = new Uint8Array(divLen);
-      for (var j = 0; j < divLen; j++) {
-        scaledDivisor[j] = fieldMultiply(divisor[j], quotient);
-      }
+      var scaledDivisor = polynomialScale(divisor, quotient);
 
       // Subtract scaled divisor from current remainder of dividend
       // to get new remainder of dividend which will be 1 order less
       for (var j = i; j < i + divLen; j++) {
-        // Galois extension field subtraction is xor with base field 2
-        dividend[j] = dividend[j] ^ scaledDivisor[j - i];
+        dividend[j] = dividend[j] ^ scaledDivisor[j - i]; // Galois extension field subtraction is xor with base field 2
       }
     }
 
@@ -185,13 +264,91 @@ var UTIL = (function() {
         throw new Error('Division did not happen properly');
       }
     }
-    return remainder;
+
+    return remainder; // trimLeadingZeros breaks this -- length expectations
+  }
+
+  // Returns evaluation in GF(256) of polynomial at value
+  // polynomial is represented as a big-endian array, IE: [1,2,3] -> x^2 + 2x + 3
+  // value is represented as an integer
+  function polynomialEval(polynomial, value) {
+    var valuePower = 1; // updated to represent value^i during loop
+    var result = 0;
+    var term;
+    var coefficient;
+    for (var i = 1; i <= polynomial.length; i++) {
+      coefficient = polynomial[polynomial.length - i];
+      term = fieldMult(coefficient, valuePower);
+      result = result ^ term; // Galois extension field addition is xor with base field 2
+      valuePower = fieldMult(valuePower, value);
+    }
+    return result;
+  }
+
+  // Returns product of polynomial and scalar in GF(256)
+  // polynomial is represented as a big-endian array, IE: [1,2,3] -> x^2 + 2x + 3
+  // value is represented as an integer
+  function polynomialScale(polynomial, scalar) {
+    if (scalar == 0) {
+      return new Uint8Array(0);
+    }
+    polynomial = trimLeadingZeros(polynomial);
+    for (var i = 0; i < polynomial.length; i++) {
+      polynomial[i] = fieldMult(polynomial[i], scalar);
+    }
+    return polynomial;
+  }
+
+  function shift(msg, rot) {
+    return msg.split('').reduce(function(accumulator, letter, index) {
+      var shiftedCharCode = letter.charCodeAt() + rot;
+      var shiftedLetter = String.fromCharCode(shiftedCharCode);
+      return accumulator + shiftedLetter;
+    }, '');
+  }
+
+  // Returns concatenation of two typed arrays
+  // From http://stackoverflow.com/questions/14071463/how-can-i-merge-typedarrays-in-javascript
+  function mergeTypedArrays(arr1, arr2) {
+    // Checks for truthy values on both arrays
+    if (!arr1 && !arr2) {
+      throw new Error('Invalid array merge inputs.');
+    }
+
+    // Checks for truthy values or empty arrays on each argument
+    // to avoid the unnecessary construction of a new array and
+    // the type comparison
+    if (!arr2 || arr2.length === 0) {
+      return arr1.slice(0);
+    }
+    if (!arr1 || arr1.length === 0) {
+      return arr2.slice(0);
+    }
+
+    // Make sure that both typed arrays are of the same type
+    if (Object.prototype.toString.call(arr1) !==
+        Object.prototype.toString.call(arr2)) {
+      throw 'Can\'t merge arrays of different types.';
+    }
+
+    var result = new arr1.constructor(arr1.length + arr2.length);
+    result.set(arr1);
+    result.set(arr2, arr1.length);
+    return result;
   }
 
   return {
-    fieldDivide: fieldDivide,
-    fieldMultiply: fieldMultiply,
+    exp3: exp3.get,
+    log3: log3.get,
+    multInv: multInv.get,
+    fieldMult: fieldMult,
+    fieldDiv: fieldDiv,
+    polynomialAdd: polynomialAdd,
+    polynomialMult: polynomialMult,
+    polynomialDiv: polynomialDiv,
+    polynomialEval: polynomialEval,
+    polynomialScale: polynomialScale,
     shift: shift,
-    polynomialDiv: polynomialDiv
+    mergeTypedArrays: mergeTypedArrays
   };
 })();
