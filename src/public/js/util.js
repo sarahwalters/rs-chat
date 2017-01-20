@@ -190,6 +190,15 @@ var UTIL = (function() {
     return trimLeadingZeros(result);
   }
 
+  function generatePoly(genLen) {
+    var poly = new Uint8Array([1,exp3[1]]);
+    for (var i = 2; i <= genLen; i++) {
+      var genRoot = new Uint8Array([1,exp3[i]]);
+      poly = polynomialMult(poly, genRoot);
+    }
+    return poly;
+  }
+
   // Returns product of two polynomials in GF(256).
   // Both mult1 and mult2 are big-endian arrays of integers which
   // represent polynomials (so, [1,2,3] is x^2 + 2*x + 3)
@@ -349,6 +358,7 @@ var UTIL = (function() {
     polynomialEval: polynomialEval,
     polynomialScale: polynomialScale,
     shift: shift,
-    mergeTypedArrays: mergeTypedArrays
+    mergeTypedArrays: mergeTypedArrays,
+    generatePoly: generatePoly
   };
 })();

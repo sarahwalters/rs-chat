@@ -6,6 +6,8 @@
 
   function main(CONSTANTS) {
     var socket = io();
+    var n = 255;
+    var k = 245;
 
     // upon form submit, encode newly posted message and emit on socket to server
     $('#post').keypress(function(e) {
@@ -15,7 +17,15 @@
       }
 
       var msg = $('#post').val();
-      var encoded = RS.encode(msg);
+      var i = 1;
+      var encoded = new Array(0);
+      for (; i <= msg.length; i++) {
+        if (i % k == 0) {
+          var block = RS.encode(msg.slice(i - k, i));
+          Array.prototype.push.apply(encoded, block);
+        }
+      }
+      Array.prototype.push.apply(encoded, RS.encode(msg.slice(i)));
       socket.emit(CONSTANTS.EVENT_TYPES.MESSAGE, encoded);
       $('#post').val('');
       return false;
@@ -23,7 +33,14 @@
 
     // upon broadcasted message from server, decode message and add to screen
     socket.on(CONSTANTS.EVENT_TYPES.MESSAGE, function(encoded) {
-      var decoded = RS.decode(encoded);
+      var i = 1;
+      var decoded = new Array(0);
+      for (; i <= encoded.length; i++) {
+        if (i % n == 0) {
+          Array.prototype.push.apply(decoded,
+              RS.decode(encoded.slice(i - n, i)));
+        }
+      }
       $('#messages').append($('<p>').text('> ' + decoded));
     });
 
