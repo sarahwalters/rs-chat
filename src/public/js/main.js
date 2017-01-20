@@ -18,14 +18,15 @@
 
       var msg = $('#post').val();
       var i = 1;
+      var last = 0;
       var encoded = new Array(0);
       for (; i <= msg.length; i++) {
         if (i % k == 0) {
-          var block = RS.encode(msg.slice(i - k, i));
-          Array.prototype.push.apply(encoded, block);
+          Array.prototype.push.apply(encoded, RS.encode(msg.slice(i - k, i)));
+          last = i;
         }
       }
-      Array.prototype.push.apply(encoded, RS.encode(msg.slice(i)));
+      Array.prototype.push.apply(encoded, RS.encode(msg.slice(last, i)));
       socket.emit(CONSTANTS.EVENT_TYPES.MESSAGE, encoded);
       $('#post').val('');
       return false;
@@ -41,7 +42,8 @@
               RS.decode(encoded.slice(i - n, i)));
         }
       }
-      $('#messages').append($('<p>').text('> ' + decoded));
+      var decodedString = decoded.join("")
+      $('#messages').append($('<p>').text('> ' + decodedString));
     });
 
     // upon update to number of connections, update connections counter

@@ -9,26 +9,25 @@ var RS = (function() {
     // Does Reed Solomon decoding on k length message block of symbols.
     // Cast msg to Uint8Array
     // If msg is not length k then pad with 0s.
-    console.log('hit with msg', msg)
     var rsMsg = new Uint8Array(k);
-    console.log('msg in length', msg.length)
     for (var i = 0; i < msg.length; i++) {
       rsMsg[i] = msg[i].charCodeAt();
     }
-    console.log(rsMsg.length)
-    console.log(rsMsg)
     return encodeRSBlock(rsMsg, n, k);
   }
 
   function decode(msg) {
     // Decode and correct an n length RS codeword in to a k length message.
     // Cast input codeword to Uint8Array
-
-    var rsMsg = new Uint8Array(n);
-    for (var i = 0; i < msg.length; i++) {
-      rsMsg[i] = msg[i];
+    var decoded = decodeRSBlock(msg, n, k);
+    var decodedString = new Array(k);
+    for (var i = 0; i < k; i++) {
+      if(decoded[i] == 0) {
+        break;
+      }
+      decodedString[i] = String.fromCharCode(decoded[i])
     }
-    return decodeRSBlock(rsMsg, n, k);
+    return decodedString
   }
 
   // Encodes using systematic BCH Reed-Solomon on Galois Field 256
