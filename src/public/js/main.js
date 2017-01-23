@@ -34,9 +34,8 @@
 
     // upon broadcasted message from server, decode message and add to screen
     socket.on(CONSTANTS.EVENT_TYPES.MESSAGE, function(encoded) {
-      var i = 1;
       var decoded = new Array(0);
-      for (; i <= encoded.length; i++) {
+      for (var i = 1; i <= encoded.length; i++) {
         if (i % n == 0) {
           Array.prototype.push.apply(decoded,
               RS.decode(encoded.slice(i - n, i)));

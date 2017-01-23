@@ -18,7 +18,7 @@ var RS = (function() {
 
   function decode(msg) {
     // Decode and correct an n length RS codeword in to a k length message.
-    // Cast input codeword to Uint8Array
+    // Cast input codeword to Uint8Array decode and return string.
     var decoded = decodeRSBlock(msg, n, k);
     var decodedString = new Array(k);
     for (var i = 0; i < k; i++) {
