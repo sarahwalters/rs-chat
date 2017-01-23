@@ -41,7 +41,7 @@
               RS.decode(encoded.slice(i - n, i)));
         }
       }
-      var decodedString = decoded.join("")
+      var decodedString = decoded.join('');
       $('#messages').append($('<p>').text('> ' + decodedString));
     });
 

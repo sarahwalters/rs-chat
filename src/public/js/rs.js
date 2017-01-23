@@ -22,12 +22,12 @@ var RS = (function() {
     var decoded = decodeRSBlock(msg, n, k);
     var decodedString = new Array(k);
     for (var i = 0; i < k; i++) {
-      if(decoded[i] == 0) {
+      if (decoded[i] == 0) {
         break;
       }
-      decodedString[i] = String.fromCharCode(decoded[i])
+      decodedString[i] = String.fromCharCode(decoded[i]);
     }
-    return decodedString
+    return decodedString;
   }
 
   // Encodes using systematic BCH Reed-Solomon on Galois Field 256
@@ -268,21 +268,6 @@ var RS = (function() {
       received[errorIndex] ^= errorMagnitudes[i];
     }
   }
-
-  // TESTING RS DECODING -- TODO REMOVE
-  // var n = 8;
-  // var k = 4;
-  // var genPoly = new Uint8Array([1, 24, 180, 158, 114]);
-  // var msg = new Uint8Array([2, 3, 4, 5]);
-  // console.log('msg', msg);
-  // var encoded = encodeRSBlock(msg, n, k);
-  // console.log('encoded', encoded);
-  // var withErrors = encoded.slice(0);
-  // withErrors[2] ^= 100;
-  // withErrors[1] ^= 3;
-  // console.log('withErrors', withErrors);
-  // var decoded = decodeRSBlock(withErrors, n, k);
-  // console.log('decoded', decoded);
 
   return {
     encode: encode,
