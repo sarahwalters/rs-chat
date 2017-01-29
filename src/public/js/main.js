@@ -24,15 +24,17 @@
       var last = 0;
       var encoded = {
         data: new Array(0),
-        uname: uname
+        uname: uname,
+        n: n,
+        k: k,
       }
       for (; i <= msg.length; i++) {
         if (i % k == 0) {
-          Array.prototype.push.apply(encoded.data, RS.encode(msg.slice(i - k, i)));
+          Array.prototype.push.apply(encoded.data, RS.encode(msg.slice(i - k, i), n, k));
           last = i;
         }
       }
-      Array.prototype.push.apply(encoded.data, RS.encode(msg.slice(last, i)));
+      Array.prototype.push.apply(encoded.data, RS.encode(msg.slice(last, i), n, k));
       socket.emit(CONSTANTS.EVENT_TYPES.MESSAGE, encoded);
       $('#post').val('');
       return false;
@@ -50,12 +52,11 @@
 
     // upon broadcasted message from server, decode message and add to screen
     socket.on(CONSTANTS.EVENT_TYPES.MESSAGE, function(encoded) {
-      console.log(encoded)
       var decoded = new Array(0);
       for (var i = 1; i <= encoded.data.length; i++) {
         if (i % n == 0) {
           Array.prototype.push.apply(decoded,
-              RS.decode(encoded.data.slice(i - n, i)));
+              RS.decode(encoded.data.slice(i - n, i), encoded.n, encoded.k));
         }
       }
       var decodedString = decoded.join('');

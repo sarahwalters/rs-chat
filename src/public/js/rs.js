@@ -2,10 +2,8 @@
 var RS = (function() {
   // Using a RS with 256 symbol size 255 symobls in a codeword and 245 message symbols.
   // n-k = 10 code symbols. Can correct up to 5 symbol errors in each 255 symbol block
-  var n = 255;
-  var k = 245;
 
-  function encode(msg) {
+  function encode(msg, n, k) {
     // Does Reed Solomon decoding on k length message block of symbols.
     // Cast msg to Uint8Array
     // If msg is not length k then pad with 0s.
@@ -16,7 +14,7 @@ var RS = (function() {
     return encodeRSBlock(rsMsg, n, k);
   }
 
-  function decode(msg) {
+  function decode(msg, n, k) {
     // Decode and correct an n length RS codeword in to a k length message.
     // Cast input codeword to Uint8Array decode and return string.
     var decoded = decodeRSBlock(msg, n, k);

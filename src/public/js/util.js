@@ -308,14 +308,6 @@ var UTIL = (function() {
     return polynomial;
   }
 
-  function shift(msg, rot) {
-    return msg.split('').reduce(function(accumulator, letter, index) {
-      var shiftedCharCode = letter.charCodeAt() + rot;
-      var shiftedLetter = String.fromCharCode(shiftedCharCode);
-      return accumulator + shiftedLetter;
-    }, '');
-  }
-
   // Returns concatenation of two typed arrays
   // From http://stackoverflow.com/questions/14071463/how-can-i-merge-typedarrays-in-javascript
   function mergeTypedArrays(arr1, arr2) {
@@ -357,7 +349,6 @@ var UTIL = (function() {
     polynomialDiv: polynomialDiv,
     polynomialEval: polynomialEval,
     polynomialScale: polynomialScale,
-    shift: shift,
     mergeTypedArrays: mergeTypedArrays,
     generatePoly: generatePoly
   };
