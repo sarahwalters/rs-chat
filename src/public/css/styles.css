@@ -28,3 +28,4 @@ form textarea {
   color: #FFFFFF;
   font-weight: bold;
 }
+.invalid { color: red; }

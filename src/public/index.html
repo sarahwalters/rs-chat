@@ -18,16 +18,34 @@
         </div>
         <div id = "login_prompt" 
          title = "Login">Login Form
-            <label> Username: </label> 
+            <br/>
+            <label for = "login_uname"> Username: </label> 
             <br/>
             <input type="text" id="login_uname" placeholder="SWOlin"><br/>
             <br/>
-            <label> Auth Key: </label> 
+            <label for = "Password"> Auth Key: </label> 
             <br/>
             <input type="text" id="Password" placeholder="Leave Empty"><br/>
             <br/>
         </div>
+        <div id = "parameter_prompt" 
+         title = "Options">Set Parameters Form
+            <br/>
+            <label for = "param_n"> Block Length for Reed Solomon Encoding N. Must be less than 256: </label> 
+            <br/>
+            <input type="text" id="param_n" value="255"><br/>
+            <br/>
+            <label for = "param_k"> Message length for Reed Solomon Encoding K. Must be less than N. (N-K)/2 errors can be corrected: </label> 
+            <br/>
+            <input type="text" id="param_k" value="245"><br/>
+            <br/>
+            <label> Simulated Symbol Error Rate to test RS decoding: </label> 
+            <br/>
+            <input type="text" id="param_BER" placeholder="0"><br/>
+            <br/>
+        </div>
         <button id = "login_opener">Login</button>
+        <button id = "parameter_opener">Reed Solomon Parameters</button>
         <div id="messages"></div>
         <div id="footer">
             <form action="">
