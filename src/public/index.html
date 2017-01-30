@@ -3,8 +3,11 @@
     <head>
         <title>rs-chat</title>
         <link rel="stylesheet" type="text/css" href="./css/styles.css">
+        <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
+         rel = "stylesheet">
         <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+        <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
         <script src="./js/util.js"></script>
         <script src="./js/rs.js"></script>
         <script src="./js/main.js"></script>
@@ -13,13 +16,22 @@
         <div id="header">
             <p id="connections">0</p>
         </div>
+        <div id = "login_prompt" 
+         title = "Login">Login Form
+            <label> Username: </label> 
+            <br/>
+            <input type="text" id="login_uname" placeholder="SWOlin"><br/>
+            <br/>
+            <label> Auth Key: </label> 
+            <br/>
+            <input type="text" id="Password" placeholder="Leave Empty"><br/>
+            <br/>
+        </div>
+        <button id = "login_opener">Login</button>
         <div id="messages"></div>
         <div id="footer">
             <form action="">
                 <textarea id="post" autocomplete="off"></textarea>
-            </form>
-            <form action="">
-                <textarea id="uname"></textarea>
             </form>
         </div>
     </body>

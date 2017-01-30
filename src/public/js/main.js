@@ -9,6 +9,27 @@
     var uname = '';
     var n = 255;
     var k = 245;
+    $(function() {
+      $( "#login_prompt" ).dialog({
+        autoOpen: false,
+        buttons: {
+          OK: function() {
+            $( this ).dialog( "close" );
+          }
+        },
+        beforeClose: function( event, ui ) {
+          if ( $( "#login_uname" ).val() == "" ) {
+            event.preventDefault();
+          } else {
+            uname = $('#login_uname').val()
+          }
+        },
+        width: 600  
+      });
+      $( "#login_opener" ).click(function() {
+        $( "#login_prompt" ).dialog( "open" );
+      });
+    });
 
     $('#uname').val('delete this and enter your user name here');
 
@@ -38,16 +59,6 @@
       socket.emit(CONSTANTS.EVENT_TYPES.MESSAGE, encoded);
       $('#post').val('');
       return false;
-    });
-
-    //Upon form submit set this clients username
-    $('#uname').keypress(function(e) {
-      // only submit upon enter key press
-      if (e.which != 13) {
-        return;
-      }
-      uname = $('#uname').val();
-      $('#uname').val('Your user name is: ' + uname);
     });
 
     // upon broadcasted message from server, decode message and add to screen

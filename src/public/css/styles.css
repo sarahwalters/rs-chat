@@ -21,3 +21,10 @@ form textarea {
   width: 100%;
   height: 50px;
 }
+
+.ui-widget-header,.ui-state-default, ui-button {
+  background:#b9cd6d;
+  border: 1px solid #b9cd6d;
+  color: #FFFFFF;
+  font-weight: bold;
+}
