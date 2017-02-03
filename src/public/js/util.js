@@ -1,4 +1,5 @@
 'use strict';
+// GF(256) arithmetic utility function library.
 var UTIL = (function() {
   var GEN = 3;
 
@@ -190,6 +191,15 @@ var UTIL = (function() {
     return trimLeadingZeros(result);
   }
 
+  function generatePoly(genLen) {
+    var poly = new Uint8Array([1,exp3[1]]);
+    for (var i = 2; i <= genLen; i++) {
+      var genRoot = new Uint8Array([1,exp3[i]]);
+      poly = polynomialMult(poly, genRoot);
+    }
+    return poly;
+  }
+
   // Returns product of two polynomials in GF(256).
   // Both mult1 and mult2 are big-endian arrays of integers which
   // represent polynomials (so, [1,2,3] is x^2 + 2*x + 3)
@@ -299,14 +309,6 @@ var UTIL = (function() {
     return polynomial;
   }
 
-  function shift(msg, rot) {
-    return msg.split('').reduce(function(accumulator, letter, index) {
-      var shiftedCharCode = letter.charCodeAt() + rot;
-      var shiftedLetter = String.fromCharCode(shiftedCharCode);
-      return accumulator + shiftedLetter;
-    }, '');
-  }
-
   // Returns concatenation of two typed arrays
   // From http://stackoverflow.com/questions/14071463/how-can-i-merge-typedarrays-in-javascript
   function mergeTypedArrays(arr1, arr2) {
@@ -348,7 +350,7 @@ var UTIL = (function() {
     polynomialDiv: polynomialDiv,
     polynomialEval: polynomialEval,
     polynomialScale: polynomialScale,
-    shift: shift,
-    mergeTypedArrays: mergeTypedArrays
+    mergeTypedArrays: mergeTypedArrays,
+    generatePoly: generatePoly
   };
 })();

@@ -1,16 +1,31 @@
 'use strict';
+// Reed Solomon encoding/decoding library.
+// Operates in GF(256) meaning that symbols can be any 1
+// byte value.
 var RS = (function() {
-  // (actually ROT-13 right now, as a dummy example. We can replace w/ RS)
-  var ROT = 13;
 
-  function encode(msg) {
-    // dummy cipher for now -- advances each letter in message by ROT
-    return UTIL.shift(msg, ROT);
+  // Does Reed Solomon encoding on k length or less message block of symbols.
+  function encode(msg, n, k) {
+    // Cast msg to Uint8Array
+    // If msg is not length k then pad with 0s.
+    var rsMsg = new Uint8Array(k);
+    for (var i = 0; i < msg.length; i++) {
+      rsMsg[i] = msg[i].charCodeAt();
+    }
+    return encodeRSBlock(rsMsg, n, k);
   }
-
-  function decode(msg) {
-    // dummy cipher for now -- advances each letter in message by -ROT
-    return UTIL.shift(msg, -ROT);
+  // Decode and correct an n length RS codeword in to a k length message.
+  function decode(msg, n, k) {
+    // Cast input codeword to Uint8Array decode and return string.
+    var decoded = decodeRSBlock(msg, n, k);
+    var decodedString = new Array(k);
+    for (var i = 0; i < k; i++) {
+      if (decoded[i] == 0) {
+        break;
+      }
+      decodedString[i] = String.fromCharCode(decoded[i]);
+    }
+    return decodedString;
   }
 
   // Encodes using systematic BCH Reed-Solomon on Galois Field 256
@@ -23,6 +38,10 @@ var RS = (function() {
   // The largest order coefficient is the [0] element of msg so as
   // to maintain the ordering of [msg, code symbols] in the coded msg.
   function encodeRSBlock(msg, n, k) {
+    if (msg.length != k) {
+      throw new Error('Message block is not length k.');
+    }
+    var genPoly = UTIL.generatePoly(n - k);
     var paddedMsg = UTIL.mergeTypedArrays(msg, new Uint8Array(n - k));
     var remainder = UTIL.polynomialDiv(paddedMsg, genPoly, n, k);
     var codedMsg = new Uint8Array(n);
@@ -36,6 +55,11 @@ var RS = (function() {
   }
 
   function decodeRSBlock(receivedMsg, n, k) {
+    if (receivedMsg.length != n) {
+      throw new Error('Received message block is not length n.');
+    }
+
+    var genPoly = UTIL.generatePoly(n - k);
     var remainder = UTIL.polynomialDiv(receivedMsg, genPoly, n, k);
     var errors = false;
     for (var i = 0; i < n - k; i++) {
@@ -242,21 +266,6 @@ var RS = (function() {
       received[errorIndex] ^= errorMagnitudes[i];
     }
   }
-
-  // TESTING RS DECODING -- TODO REMOVE
-  var n = 8;
-  var k = 4;
-  var genPoly = new Uint8Array([1, 24, 180, 158, 114]);
-  var msg = new Uint8Array([2, 3, 4, 5]);
-  console.log('msg', msg);
-  var encoded = encodeRSBlock(msg, n, k);
-  console.log('encoded', encoded);
-  var withErrors = encoded.slice(0);
-  withErrors[2] ^= 100;
-  withErrors[1] ^= 3;
-  console.log('withErrors', withErrors);
-  var decoded = decodeRSBlock(withErrors, n, k);
-  console.log('decoded', decoded);
 
   return {
     encode: encode,

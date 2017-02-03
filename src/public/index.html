@@ -3,8 +3,11 @@
     <head>
         <title>rs-chat</title>
         <link rel="stylesheet" type="text/css" href="./css/styles.css">
+        <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
+         rel = "stylesheet">
         <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+        <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
         <script src="./js/util.js"></script>
         <script src="./js/rs.js"></script>
         <script src="./js/main.js"></script>
@@ -13,6 +16,36 @@
         <div id="header">
             <p id="connections">0</p>
         </div>
+        <div id = "login_prompt" 
+         title = "Login">Login Form
+            <br/>
+            <label for = "login_uname"> Username: </label> 
+            <br/>
+            <input type="text" id="login_uname" placeholder="SWOlin"><br/>
+            <br/>
+            <label for = "Password"> Auth Key: </label> 
+            <br/>
+            <input type="text" id="Password" placeholder="Leave Empty"><br/>
+            <br/>
+        </div>
+        <div id = "parameter_prompt" 
+         title = "Options">Set Parameters Form
+            <br/>
+            <label for = "param_n"> Block Length for Reed Solomon Encoding N. Must be less than 256: </label> 
+            <br/>
+            <input type="text" id="param_n" value="255"><br/>
+            <br/>
+            <label for = "param_k"> Message length for Reed Solomon Encoding K. Must be less than N. (N-K)/2 errors can be corrected: </label> 
+            <br/>
+            <input type="text" id="param_k" value="245"><br/>
+            <br/>
+            <label> Simulated Symbol Error Rate to test RS decoding: </label> 
+            <br/>
+            <input type="text" id="param_BER" placeholder="0"><br/>
+            <br/>
+        </div>
+        <button id = "login_opener">Login</button>
+        <button id = "parameter_opener">Reed Solomon Parameters</button>
         <div id="messages"></div>
         <div id="footer">
             <form action="">
