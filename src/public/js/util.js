@@ -1,4 +1,5 @@
 'use strict';
+// GF(256) arithmetic utility function library.
 var UTIL = (function() {
   var GEN = 3;
 
