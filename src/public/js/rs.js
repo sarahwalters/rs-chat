@@ -4,7 +4,7 @@
 // byte value.
 var RS = (function() {
 
-  // Does Reed Solomon decoding on k length or less message block of symbols.
+  // Does Reed Solomon encoding on k length or less message block of symbols.
   function encode(msg, n, k) {
     // Cast msg to Uint8Array
     // If msg is not length k then pad with 0s.
