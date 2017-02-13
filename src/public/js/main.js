@@ -84,6 +84,7 @@
       }
       Array.prototype.push.apply(encoded.data, RS.encode(
         msg.slice(last, i), n, k));
+      console.log(encoded.data);
       socket.emit(CONSTANTS.EVENT_TYPES.MESSAGE, encoded);
       $('#post').val('');
       return false;
